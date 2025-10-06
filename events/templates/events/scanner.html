@@ -1,0 +1,180 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="container mx-auto">
+    <div class="flex justify-center">
+        <div class="w-full max-w-2xl">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gray-800 text-white p-4 text-center">
+                    <h2 class="text-xl font-semibold">QR Code Scanner</h2>
+                    <p class="text-sm text-gray-300">for "{{ event.title }}"</p>
+                </div>
+                <div class="p-6">
+                    <div id="loadingMessage" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-100" role="alert">
+                        ⌛ Detecting cameras...
+                    </div>
+                    <div class="relative w-full aspect-w-1 aspect-h-1 rounded-lg overflow-hidden border-2 border-gray-200">
+                         <!-- The camera feed will be drawn onto this canvas -->
+                        <canvas id="canvas" class="w-full h-full"></canvas>
+                    </div>
+                    <div id="scan-results" class="mt-4 h-16"></div>
+                </div>
+                <div class="bg-gray-50 p-4 border-t border-gray-200">
+                     <div id="camera-controls" class="mb-2 text-center">
+                        <!-- The Switch Camera button will be added here by the script -->
+                     </div>
+                    <p class="text-gray-500 text-sm text-center mb-0">Point the camera at an attendee's QR code.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- This is a hidden video element that the camera stream will be attached to -->
+<video id="video" playsinline hidden></video>
+
+<!-- Include the jsQR library -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+<script>
+  const video = document.getElementById("video");
+  const canvasElement = document.getElementById("canvas");
+  const canvas = canvasElement.getContext("2d");
+  const loadingMessage = document.getElementById("loadingMessage");
+  const resultsDiv = document.getElementById("scan-results");
+  const cameraControlsDiv = document.getElementById("camera-controls");
+
+  let lastScanTime = 0;
+  let cameras = [];
+  let currentCameraIndex = 0;
+  let currentStream;
+
+  function drawLine(begin, end, color) {
+    canvas.beginPath();
+    canvas.moveTo(begin.x, begin.y);
+    canvas.lineTo(end.x, end.y);
+    canvas.lineWidth = 4;
+    canvas.strokeStyle = color;
+    canvas.stroke();
+  }
+  
+  function stopCurrentStream() {
+      if (currentStream) {
+          currentStream.getTracks().forEach(track => {
+              track.stop();
+          });
+      }
+  }
+
+  function startCamera(deviceId) {
+    stopCurrentStream();
+    
+    const constraints = {
+        video: { deviceId: deviceId ? { exact: deviceId } : { facingMode: "environment" } }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+        currentStream = stream;
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true); // Required to work on iOS
+        video.play();
+        requestAnimationFrame(tick);
+    }).catch(function(err) {
+        console.error("Camera Access Error:", err);
+        loadingMessage.innerHTML = "❌ ERROR: Could not access the camera. Please grant permission and refresh the page.";
+        loadingMessage.classList.replace('bg-blue-100', 'bg-red-100');
+        loadingMessage.classList.replace('text-blue-800', 'text-red-800');
+    });
+  }
+  
+  navigator.mediaDevices.enumerateDevices().then(function(devices) {
+    cameras = devices.filter(device => device.kind === 'videoinput');
+    
+    if (cameras.length > 0) {
+        loadingMessage.innerText = `Found ${cameras.length} camera(s). Starting scanner...`;
+        
+        if (cameras.length > 1) {
+            cameraControlsDiv.innerHTML = `<button id="switch-camera" class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700">Switch Camera</button>`;
+            document.getElementById("switch-camera").addEventListener('click', () => {
+                currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+                startCamera(cameras[currentCameraIndex].deviceId);
+            });
+        }
+        
+        startCamera(cameras[currentCameraIndex].deviceId);
+    } else {
+        loadingMessage.innerHTML = "❌ ERROR: No cameras found on this device.";
+        loadingMessage.classList.replace('bg-blue-100', 'bg-red-100');
+        loadingMessage.classList.replace('text-blue-800', 'text-red-800');
+    }
+  }).catch(function(err) {
+      console.error("Device enumeration error:", err);
+      loadingMessage.innerHTML = "❌ ERROR: Could not list available cameras.";
+      loadingMessage.classList.replace('bg-blue-100', 'bg-red-100');
+      loadingMessage.classList.replace('text-blue-800', 'text-red-800');
+  });
+
+
+  function tick() {
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      loadingMessage.style.display = 'none';
+      canvasElement.style.display = 'block';
+      
+      canvasElement.height = video.videoHeight;
+      canvasElement.width = video.videoWidth;
+      canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+      var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+      var code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+
+      if (code) {
+        drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#EF4444");
+        drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#EF4444");
+        drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#EF4444");
+        drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#EF4444");
+        
+        let now = Date.now();
+        if (now - lastScanTime > 3000) { // Throttle scans to every 3 seconds
+            lastScanTime = now;
+            handleScanResult(code.data);
+        }
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function handleScanResult(content) {
+    console.log(`Scan result: ${content}`);
+    resultsDiv.innerHTML = `<div class="p-4 text-sm text-blue-800 rounded-lg bg-blue-100" role="alert">Processing...</div>`;
+
+    const payload = {
+      qr_data: content,
+      current_event_id: '{{ event.id }}' 
+    };
+
+    fetch("{% url 'check_in' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+      let alertClass = 'bg-red-100 text-red-800'; // Default to error
+      if (data.status === 'success') {
+          alertClass = 'bg-green-100 text-green-800';
+      } else if (data.status === 'warning') {
+          alertClass = 'bg-yellow-100 text-yellow-800';
+      }
+      resultsDiv.innerHTML = `<div class="p-4 text-sm rounded-lg ${alertClass}" role="alert">${data.message}</div>`;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      resultsDiv.innerHTML = `<div class="p-4 text-sm text-red-800 rounded-lg bg-red-100" role="alert">An error occurred. Please try again.</div>`;
+    });
+  }
+</script>
+{% endblock %}

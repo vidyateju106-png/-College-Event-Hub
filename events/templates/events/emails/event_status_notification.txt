@@ -1,0 +1,13 @@
+Hello {{ organizer.username }},
+
+This is an update regarding your event submission, "{{ event.title }}".
+
+The status of your event has been updated to: {{ event.status }}
+
+{% if event.status == 'Approved' %}
+Congratulations! Your event is now live and visible to all students on the CEMS portal.
+{% elif event.status == 'Rejected' %}
+Your event submission has been rejected. Please log in to your Organizer Dashboard to review, edit, and resubmit your event.
+{% endif %}
+
+- The CEMS Admin Team

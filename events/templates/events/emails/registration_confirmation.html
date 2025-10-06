@@ -1,0 +1,41 @@
+{% extends 'events/emails/base_email.html' %}
+
+{% block email_content %}
+    <p style="font-size: 16px; margin: 0 0 16px;">Hi {{ user.first_name|default:user.username }},</p>
+    <p style="margin: 0 0 24px;">Thank you for registering for <strong>{{ event.title }}</strong>! We're thrilled to confirm your spot.</p>
+    
+    <table cellpadding="12" cellspacing="0" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; margin: 24px 0; font-size: 14px;">
+        <tr>
+            <td style="width: 100px; font-weight: 600; color: #4b5563;">Event:</td>
+            <td>{{ event.title }}</td>
+        </tr>
+        <tr>
+            <td style="border-top: 1px solid #e5e7eb; font-weight: 600; color: #4b5563;">Date:</td>
+            <td style="border-top: 1px solid #e5e7eb;">{{ event.start_time|date:"F d, Y" }}</td>
+        </tr>
+        <tr>
+            <td style="border-top: 1px solid #e5e7eb; font-weight: 600; color: #4b5563;">Time:</td>
+            <td style="border-top: 1px solid #e5e7eb;">{{ event.start_time|date:"P" }} - {{ event.end_time|date:"P" }}</td>
+        </tr>
+        <tr>
+            <td style="border-top: 1px solid #e5e7eb; font-weight: 600; color: #4b5563;">Location:</td>
+            <td style="border-top: 1px solid #e5e7eb;">
+                {% if event.is_online %}Online Event{% else %}Bengaluru University Campus{% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    {% if not event.is_online %}
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px;">Your Ticket</h3>
+        <p style="margin: 0 0 24px;">Your unique QR code for check-in is attached to this email as a PDF. Please have it ready when you arrive at the event.</p>
+    {% else %}
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px;">How to Join</h3>
+        <p style="margin: 0 0 24px;">This is a virtual event. You can join the live stream by clicking the button below on the event day.</p>
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{{ event_url }}" style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">View Live Stream</a>
+        </div>
+    {% endif %}
+
+    <p style="margin: 0 0 16px;">We can't wait to see you there!</p>
+    <p style="margin: 0;">Best,<br>The CEMS Team</p>
+{% endblock %}

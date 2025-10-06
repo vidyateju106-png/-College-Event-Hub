@@ -1,0 +1,64 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<style>
+    /* Custom styles for the star rating */
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .star-rating input[type="radio"] { display: none; }
+    .star-rating label {
+        font-size: 3rem;
+        color: #D1D5DB; /* Equivalent to text-gray-300 */
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+    /* Styles for checked star and hovered stars */
+    .star-rating:not(:hover) input[type="radio"]:checked ~ label,
+    .star-rating:hover label:hover,
+    .star-rating:hover label:hover ~ label {
+        color: #FBBF24; /* Equivalent to text-amber-400 */
+    }
+</style>
+
+<div class="container mx-auto">
+    <div class="flex justify-center py-8">
+        <div class="w-full max-w-lg">
+            <div class="bg-white rounded-xl shadow-lg">
+                <div class="bg-gray-800 text-white p-6 rounded-t-xl text-center">
+                    <h2 class="text-2xl font-bold">Leave Feedback for "{{ event.title }}"</h2>
+                </div>
+                <div class="p-8">
+                    <p class="text-center text-gray-600 mb-6">Your feedback is valuable to us!</p>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-6">
+                            <label class="block text-center text-sm font-medium text-gray-700 mb-2"><strong>Your Overall Rating:</strong></label>
+                            <div class="star-rating">
+                                {% for value, text in form.rating.field.choices %}
+                                <input type="radio" id="star{{ value }}" name="rating" value="{{ value }}" required /><label for="star{{ value }}" title="{{ text }} stars">★</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <hr class="my-6">
+
+                        <div class="mb-4">
+                            <label for="{{ form.comment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1"><strong>Comments (optional):</strong></label>
+                            {{ form.comment }}
+                        </div>
+
+                        <div class="mt-8">
+                            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Submit Feedback</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="container mx-auto">
+    <div class="flex justify-center py-8">
+        <div class="w-full max-w-lg">
+            <div class="bg-white rounded-xl shadow-lg border-t-4 border-red-500">
+                <div class="p-8">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold text-gray-800">Confirm Deletion</h2>
+                        <p class="mt-2 text-gray-600">Are you sure you want to delete the event: <strong class="font-medium text-gray-900">"{{ object.title }}"</strong>?</p>
+                        <p class="mt-4 text-sm text-red-700 bg-red-50 p-3 rounded-lg"><i class="fas fa-exclamation-triangle mr-2"></i>This action cannot be undone. All registrations and associated data will be permanently removed.</p>
+                    </div>
+                    <hr class="my-6">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="flex justify-end items-center mt-6">
+                            <a href="{% url 'organizer_dashboard' %}" class="text-gray-600 hover:text-gray-800 font-medium mr-4">Cancel</a>
+                            <button type="submit" class="bg-red-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-red-700 transition duration-300">
+                                Yes, Delete Event
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

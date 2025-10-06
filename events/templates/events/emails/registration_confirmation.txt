@@ -1,0 +1,18 @@
+Hello {{ user.username }},
+
+Thank you for registering for the event: "{{ event.title }}"!
+
+Event Details:
+Start Time: {{ event.start_time }}
+End Time: {{ event.end_time }}
+Mode: {% if event.is_online %}Online{% else %}In-Person{% endif %}
+
+{% if not event.is_online %}
+Your QR code is attached to this email. Please present it at the event for check-in.
+{% else %}
+You can view the live stream on the event page: {{ event_url }}
+{% endif %}
+
+We look forward to seeing you there!
+
+The CEMS Team

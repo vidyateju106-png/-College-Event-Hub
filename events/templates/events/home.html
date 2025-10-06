@@ -1,0 +1,103 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="container mx-auto">
+    <!-- Hero Section -->
+    <div class="relative bg-black-to-r from-black-600 via-blue-600 to-black-700 rounded-2xl text-white shadow-xl overflow-hidden mb-10">
+        <div class="absolute inset-0 bg-black opacity-500"></div>
+        <div class="relative z-10 p-8 md:p-16 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Campus Events Hub</h1>
+            <p class="mt-4 text-lg text-black-600 max-w-3xl mx-auto">Discover, register, and engage with the exciting happenings on campus. Your next opportunity starts here.</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-10">
+        <form method="GET" action="{% url 'home' %}" class="flex flex-col md:flex-row items-center gap-4">
+            <div class="w-full md:flex-grow">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" name="q" class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-300" placeholder="Search for events by title..." value="{{ request.GET.q }}">
+                </div>
+            </div>
+            <div class="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+                 <button type="submit" class="btn btn-primary w-full sm:w-auto px-8 py-3">Search</button>
+                 <a href="{% url 'home' %}" class="btn btn-secondary w-full sm:w-auto text-center px-8 py-3">Clear</a>
+            </div>
+        </form>
+        <div class="mt-4 flex justify-center md:justify-start space-x-2">
+            <a href="?filter=online" class="px-4 py-2 rounded-full text-sm font-medium {% if event_filter == 'online' %} bg-blue-100 text-blue-800 ring-2 ring-blue-300 {% else %} bg-gray-100 text-gray-700 hover:bg-gray-200 {% endif %} transition-colors">Online Events</a>
+            <a href="?filter=in-person" class="px-4 py-2 rounded-full text-sm font-medium {% if event_filter == 'in-person' %} bg-indigo-100 text-indigo-800 ring-2 ring-indigo-300 {% else %} bg-gray-100 text-gray-700 hover:bg-gray-200 {% endif %} transition-colors">In-Person</a>
+        </div>
+    </div>
+    
+    <h2 class="text-3xl font-bold text-gray-800 pb-2 border-b-2 border-blue-200 mb-8">Upcoming Events</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for event in page_obj %}
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col group transform hover:-translate-y-2 transition-all duration-300">
+            <div class="p-6 flex-grow flex flex-col">
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">{{ event.title }}</h3>
+                    {% if event.is_online %}
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">Online</span>
+                    {% else %}
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">In-Person</span>
+                    {% endif %}
+                </div>
+                <p class="text-gray-500 text-sm mb-4">
+                    <i class="fas fa-calendar-alt mr-1 text-gray-400"></i>
+                    {{ event.start_time|date:"F d, Y, P" }}
+                </p>
+                <p class="text-gray-600 flex-grow text-sm leading-relaxed mb-6">{{ event.description|truncatewords:22 }}</p>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="{% url 'event_detail' event.id %}" class="btn btn-primary w-full text-center">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="md:col-span-2 lg:col-span-3">
+            <div class="bg-white border-l-4 border-blue-500 text-gray-800 p-8 rounded-r-lg shadow-md">
+                <h4 class="font-bold text-2xl">No Events Found</h4>
+                <p class="mt-2">There are no upcoming events matching your criteria. Try a different search or clear the filters to see all available events.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-12 flex justify-center">
+        <ul class="flex items-center -space-x-px h-10 text-base">
+            {% if page_obj.has_previous %}
+                <li>
+                    <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&filter={{ event_filter }}" class="flex items-center justify-center px-4 h-10 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for i in page_obj.paginator.page_range %}
+                <li>
+                    <a href="?page={{ i }}&q={{ query }}&filter={{ event_filter }}" class="flex items-center justify-center px-4 h-10 leading-tight {% if page_obj.number == i %} text-blue-600 bg-blue-50 border-blue-300 hover:bg-blue-100 hover:text-blue-700 z-10 ring-2 ring-blue-400{% else %} text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 {% endif %}">{{ i }}</a>
+                </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li>
+                    <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&filter={{ event_filter }}" class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chhevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}
+

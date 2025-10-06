@@ -1,0 +1,101 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="container mx-auto">
+    <!-- Header -->
+    <div class="mb-8 pb-4 border-b border-gray-200">
+        <h1 class="text-3xl font-bold text-gray-800">My Registrations</h1>
+        <p class="mt-2 text-lg text-gray-500">Manage your upcoming and past event registrations.</p>
+    </div>
+
+    {% if not upcoming_registrations and not past_registrations %}
+        <div class="text-center bg-white rounded-xl shadow-md p-12 mt-8">
+            <i class="fas fa-ticket-alt fa-4x text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">You haven't registered for any events yet.</p>
+            <a href="{% url 'home' %}" class="mt-4 btn btn-primary">Browse Events Now</a>
+        </div>
+    {% else %}
+        <!-- Upcoming Registrations Section -->
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Upcoming Events</h2>
+            {% if upcoming_registrations %}
+                <div class="space-y-4">
+                    {% for registration in upcoming_registrations %}
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col sm:flex-row items-center p-6 group transform hover:-translate-y-1 transition-all duration-300">
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">{{ registration.event.title }}</h3>
+                                {% if registration.event.is_online %}
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">Online</span>
+                                {% else %}
+                                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">In-Person</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-gray-500 text-sm mb-2">
+                                <i class="fas fa-calendar-alt mr-1 text-gray-400"></i>
+                                {{ registration.event.start_time|date:"F d, Y, P" }}
+                            </p>
+                            <p class="text-xs text-gray-400">Registered on: {{ registration.registered_at|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
+                            {% if registration.event.is_online %}
+                                <a href="{% url 'event_detail' registration.event.id %}" class="w-full sm:w-auto text-center bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
+                                    <i class="fas fa-video mr-2"></i>View Stream
+                                </a>
+                            {% else %}
+                                <a href="{% url 'registration_confirmation' registration.id %}" class="w-full sm:w-auto text-center bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 flex items-center justify-center">
+                                    <i class="fas fa-qrcode mr-2"></i>View Ticket
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-xl shadow-sm p-6 text-center text-gray-500">
+                    <p>You have no upcoming event registrations.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Past Registrations Section -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Past Events</h2>
+            {% if past_registrations %}
+                <div class="space-y-4">
+                    {% for registration in past_registrations %}
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col sm:flex-row items-center p-6 bg-gray-50 group">
+                        <div class="flex-grow">
+                             <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-xl font-bold text-gray-600 leading-tight">{{ registration.event.title }}</h3>
+                                <span class="bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">Completed</span>
+                            </div>
+                            <p class="text-gray-500 text-sm">
+                                <i class="fas fa-calendar-check mr-1 text-gray-400"></i>
+                                Ended on: {{ registration.event.end_time|date:"F d, Y" }}
+                            </p>
+                        </div>
+                         <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
+                            {% if registration.has_submitted_feedback %}
+                                <button class="w-full sm:w-auto bg-green-100 text-green-800 font-bold py-2 px-4 rounded-lg cursor-not-allowed flex items-center justify-center" disabled>
+                                    <i class="fas fa-check-circle mr-2"></i>Feedback Submitted
+                                </button>
+                            {% else %}
+                                <a href="{% url 'leave_feedback' registration.event.id %}" class="w-full sm:w-auto text-center bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300 flex items-center justify-center">
+                                    <i class="fas fa-star mr-2"></i>Leave Feedback
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                 <div class="bg-white rounded-xl shadow-sm p-6 text-center text-gray-500">
+                    <p>You have no past event registrations.</p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,131 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="container mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Organizer Dashboard</h1>
+            <p class="mt-1 text-lg text-gray-500">Manage your events and track their performance.</p>
+        </div>
+        <a href="{% url 'add_event' %}" class="bg-blue-700 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-700 transition duration-300 mt-4 md:mt-0 flex items-center justify-center">
+            <i class="fas fa-plus-circle mr-2"></i>Create New Event
+        </a>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Events -->
+        <div class="bg-white rounded-xl shadow-md p-6 flex items-center">
+            <div class="bg-blue-100 p-4 rounded-full">
+                <i class="fas fa-calendar-alt fa-2x text-blue-600"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Total Events</p>
+                <p class="text-2xl font-bold text-gray-800">{{ total_events }}</p>
+            </div>
+        </div>
+        <!-- Pending Approval -->
+        <div class="bg-white rounded-xl shadow-md p-6 flex items-center">
+            <div class="bg-yellow-100 p-4 rounded-full">
+                <i class="fas fa-hourglass-half fa-2x text-yellow-600"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Pending Approval</p>
+                <p class="text-2xl font-bold text-gray-800">{{ pending_approval }}</p>
+            </div>
+        </div>
+        <!-- Total Registrations -->
+        <div class="bg-white rounded-xl shadow-md p-6 flex items-center">
+            <div class="bg-green-100 p-4 rounded-full">
+                <i class="fas fa-users fa-2x text-green-600"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Total Registrations</p>
+                <p class="text-2xl font-bold text-gray-800">{{ total_registrations }}</p>
+            </div>
+        </div>
+        <!-- Total Check-ins -->
+        <div class="bg-white rounded-xl shadow-md p-6 flex items-center">
+            <div class="bg-indigo-100 p-4 rounded-full">
+                <i class="fas fa-user-check fa-2x text-indigo-600"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Total Check-ins</p>
+                <p class="text-2xl font-bold text-gray-800">{{ total_check_ins }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Events Table Card -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="bg-gray-800 text-white p-4">
+            <h2 class="text-xl font-semibold">My Events</h2>
+        </div>
+        
+        {% if organized_events %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Scanner</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for event in organized_events %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-gray-900">{{ event.title }}</div>
+                            <div class="text-sm text-gray-500">{{ event.start_time|date:"D, M d, Y" }}</div>
+                            {% if event.status == 'Rejected' and event.rejection_reason %}
+                                <div class="text-xs text-red-600 mt-1" title="{{ event.rejection_reason }}">
+                                    <i class="fas fa-info-circle mr-1"></i> {{ event.rejection_reason|truncatewords:10 }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if event.status == 'Approved' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{ event.status }}</span>
+                            {% elif event.status == 'Pending Approval' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ event.status }}</span>
+                            {% elif event.status == 'Rejected' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">{{ event.status }}</span>
+                            {% elif event.status == 'Completed' %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">{{ event.status }}</span>
+                            {% else %}<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ event.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{{ event.checked_in_count }} / {{ event.registrations_count }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            {% if event.status == 'Approved' and not event.is_online %}
+                                <a href="{% url 'scanner' event.id %}" class="font-medium text-blue-600 hover:text-blue-800">Open Scanner</a>
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                            <div class="flex items-center justify-center space-x-1">
+                                <a href="{% url 'view_participants' event.id %}" class="p-2 rounded-md hover:bg-indigo-100 text-indigo-600 transition-colors" title="View Participants"><i class="fas fa-users fa-fw"></i></a>
+                                <a href="{% url 'edit_event' event.id %}" class="p-2 rounded-md hover:bg-blue-100 text-blue-600 transition-colors" title="Edit Event"><i class="fas fa-edit fa-fw"></i></a>
+                                {% if event.status == 'Completed' %}
+                                    <a href="{% url 'analytics_dashboard' event.id %}" class="p-2 rounded-md hover:bg-yellow-100 text-yellow-500 transition-colors" title="View Analytics"><i class="fas fa-chart-pie fa-fw"></i></a>
+                                {% endif %}
+                                <a href="{% url 'delete_event' event.pk %}" class="p-2 rounded-md hover:bg-red-100 text-red-600 transition-colors" title="Delete Event"><i class="fas fa-trash fa-fw"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center p-12">
+             <i class="fas fa-calendar-times fa-4x text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">You have not created any events yet.</p>
+            <a href="{% url 'add_event' %}" class="mt-4 btn btn-secondary">Create Your First Event</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

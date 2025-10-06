@@ -1,0 +1,16 @@
+Environment variables
+.env
+
+Python cache
+*.pyc
+pycache/
+
+Database
+db.sqlite3
+*.sqlite3
+
+Media files - These are user-generated and should not be in version control
+/media/
+
+Virtual environment
+venv/

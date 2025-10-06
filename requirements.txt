@@ -1,0 +1,7 @@
+qrcode[pil]
+django-extensions
+Werkzeug
+pyOpenSSL
+xhtml2pdf
+django-apscheduler
+python-decouple

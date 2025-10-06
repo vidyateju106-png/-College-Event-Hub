@@ -1,0 +1,33 @@
+{% extends 'events/emails/base_email.html' %}
+
+{% block email_content %}
+    <p style="font-size: 16px; margin: 0 0 16px;">Hello {{ organizer.username }},</p>
+    <p style="margin: 0 0 24px;">This is an update regarding your event submission for: <strong>{{ event.title }}</strong>.</p>
+    
+    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-align: center;">
+        <p style="font-size: 14px; color: #4b5563; margin: 0 0 8px;">The status of your event has been updated to:</p>
+        {% if event.status == 'Approved' %}
+            <p style="font-size: 20px; font-weight: 600; color: #059669; margin: 0;">Approved</p>
+        {% elif event.status == 'Rejected' %}
+            <p style="font-size: 20px; font-weight: 600; color: #dc2626; margin: 0;">Rejected</p>
+        {% else %}
+            <p style="font-size: 20px; font-weight: 600; color: #374151; margin: 0;">{{ event.status }}</p>
+        {% endif %}
+    </div>
+
+    {% if event.status == 'Approved' %}
+        <p style="margin: 24px 0 0;">Congratulations! Your event is now live on the CEMS portal. You can manage it from your dashboard.</p>
+    {% elif event.status == 'Rejected' %}
+        <p style="margin: 24px 0 8px;">Your event submission was rejected for the following reason:</p>
+        <blockquote style="border-left: 4px solid #e5e7eb; padding-left: 1rem; margin: 0 0 24px; font-style: italic; color: #4b5563;">
+            <p style="margin: 0;">{{ event.rejection_reason }}</p>
+        </blockquote>
+        <p style="margin: 0;">Please log in to edit and resubmit it for approval.</p>
+    {% endif %}
+
+    <div style="text-align: center; margin: 32px 0;">
+        <a href="http://{{ domain }}{% url 'organizer_dashboard' %}" style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">Go to My Dashboard</a>
+    </div>
+
+    <p style="margin: 0;">Sincerely,<br>The CEMS Admin Team</p>
+{% endblock %}

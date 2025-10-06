@@ -1,0 +1,15 @@
+{% extends 'events/emails/base_email.html' %}
+
+{% block email_content %}
+    <p style="font-size: 16px; margin: 0 0 16px;">Hello {{ user.first_name|default:user.username }},</p>
+    <p style="margin: 0 0 16px;">Thank you for attending <strong>{{ event.title }}</strong>! We hope you had a fantastic experience.</p>
+    <p style="margin: 0 0 24px;">Your feedback is incredibly valuable. It helps us improve future events and build a vibrant campus community. Please take a moment to share your thoughts.</p>
+    
+    <div style="text-align: center; margin: 32px 0;">
+        <a href="{{ feedback_url }}" style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">Leave Feedback Now</a>
+    </div>
+
+    <p style="margin: 0 0 16px;">Thank you for your time and participation.</p>
+    
+    <p style="margin: 0;">Best,<br>The CEMS Team</p>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl w-full mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row">
+        
+        <!-- Image Section -->
+        <div class="w-full md:w-1/2">
+            <img class="object-cover h-full w-full" src="https://placehold.co/600x800/1f2937/f8fafc?text=CEMS" alt="College Event Management System">
+        </div>
+
+        <!-- Form Section -->
+        <div class="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Welcome Back!</h1>
+                <p class="text-gray-600 mt-2">Log in to continue your journey with us.</p>
+            </div>
+            
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if login_form.non_field_errors %}
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg" role="alert">
+                        {% for error in login_form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div>
+                    <label for="{{ login_form.username.id_for_label }}" class="sr-only">Username</label>
+                    <input id="{{ login_form.username.id_for_label }}" name="{{ login_form.username.html_name }}" type="text" autocomplete="username" required class="form-input" placeholder="Username">
+                </div>
+                
+                <div>
+                    <label for="{{ login_form.password.id_for_label }}" class="sr-only">Password</label>
+                    <input id="{{ login_form.password.id_for_label }}" name="{{ login_form.password.html_name }}" type="password" autocomplete="current-password" required class="form-input" placeholder="Password">
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+                            Forgot your password?
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                     <button type="submit" class="w-full btn bg-blue-700 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">
+                        Log In
+                    </button>
+                </div>
+            </form>
+            
+            <div class="text-center mt-6">
+                <p class="text-sm text-gray-600">Don't have an account? <a href="{% url 'signup' %}" class="font-medium text-indigo-600 hover:text-indigo-500">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

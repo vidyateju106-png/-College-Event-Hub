@@ -1,0 +1,13 @@
+Hello {{ user.username }},
+
+Thank you for attending the event: "{{ event.title }}"!
+
+We hope you had a great experience. Your feedback is very important to us and helps the organizers improve future events for everyone.
+
+Please take a moment to share your thoughts by clicking the link below:
+{{ feedback_url }}
+
+Thank you for your time and for being a part of our campus community.
+
+Sincerely,
+The CEMS Team
