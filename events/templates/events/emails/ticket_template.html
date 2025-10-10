@@ -2,145 +2,95 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Event Ticket for {{ event.title }}</title>
+    <title>Ticket - {{ event.title }}</title>
     <style>
-        @page {
-            size: a4 portrait;
-            margin: 0;
-        }
-        body {
-            font-family: 'Inter', Arial, sans-serif;
-            color: #374151;
-            font-size: 14px;
-            background-color: #f3f4f6;
-            padding: 40px;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .ticket-container {
-            border: 1px solid #d1d5db;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 700px;
-            margin: auto;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            display: -pdf-flexbox;
-            -pdf-flex-direction: row;
-            background-color: #ffffff;
-        }
-        .main-content {
-            width: 65%;
-            padding: 32px;
-        }
-        .stub {
-            width: 35%;
-            background-color: #f9fafb;
-            border-left: 2px dashed #d1d5db;
-            padding: 32px;
-            text-align: center;
-            display: -pdf-flexbox;
-            -pdf-flex-direction: column;
-            -pdf-align-items: center;
-            -pdf-justify-content: center;
-        }
-        .header {
-            margin-bottom: 24px;
-        }
-        .header .logo {
-            font-size: 24px;
-            font-weight: 800;
-            color: #1f2937;
-            letter-spacing: 1px;
-        }
-        .event-title {
-            font-size: 32px;
-            font-weight: 800;
-            color: #111827;
-            line-height: 1.2;
-            margin: 0 0 24px;
-        }
-        .details-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .details-table td {
-            padding: 10px 0;
-            vertical-align: top;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .details-table tr:last-child td {
-            border-bottom: none;
-        }
-        .details-table .label {
-            font-weight: 600;
-            width: 120px;
-            color: #4b5563;
-        }
-        .stub h3 {
-            margin: 0 0 16px;
-            font-size: 18px;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: #4b5563;
-            letter-spacing: 0.5px;
-        }
-        .stub .attendee-name {
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 20px;
-        }
-        .stub img {
-            width: 180px;
-            height: 180px;
-            border: 4px solid #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .stub .reg-id {
-            font-size: 10px;
-            margin-top: 12px;
-            color: #6b7280;
-            letter-spacing: 0.5px;
-        }
-        .footer-note {
-            margin-top: 32px;
-            font-size: 12px;
-            color: #6b7280;
-        }
+        /* Table-based layout for reliable PDF rendering (xhtml2pdf compatible) */
+        @page { size: A4; margin: 15mm }
+        body { font-family: Arial, Helvetica, sans-serif; color:#222; font-size:13px; background:#fff; }
+        .outer { width:100%; max-width:800px; margin:0 auto; }
+        .ticket-box { border:1px solid #dfe6ee; border-radius:6px; overflow:hidden; }
+        .banner { background-color:#0b69ff; color:#ffffff; padding:14px 16px; }
+        .brand { font-size:18px; font-weight:700; }
+        .banner-sub { font-size:11px; opacity:0.95; margin-top:4px; }
+        table.layout { width:100%; border-collapse:collapse; }
+        td.left { width:65%; vertical-align:top; padding:18px; }
+        td.right { width:35%; vertical-align:top; padding:18px; border-left:1px solid #eef2f6; text-align:center; }
+        .event-title { font-size:18px; font-weight:700; margin:0 0 6px 0; }
+        .when, .where, .organizer, .mode { font-size:12px; color:#4b5563; margin:4px 0; }
+        .label { display:block; font-size:11px; color:#6b7280; }
+        .value { font-weight:700; color:#0f172a; font-size:13px; }
+        .qr-img { width:160px; height:160px; display:block; margin:8px auto; border:4px solid #ffffff; }
+        .attendee { font-size:14px; font-weight:700; margin-top:8px; }
+        .regid { font-size:11px; color:#7b8794; margin-top:6px; }
+        .notes { font-size:11px; color:#6b7280; margin-top:12px; }
+        .footer { padding:12px 16px; border-top:1px solid #f1f5f9; font-size:11px; color:#6b7280; }
+        .small { font-size:10px; color:#98a0ad }
     </style>
 </head>
 <body>
-    <div class="ticket-container">
-        <div class="main-content">
-            <div class="header">
-                <div class="logo">CEMS</div>
+    <div class="outer">
+        <div class="ticket-box">
+            <div class="banner">
+                <div class="brand">College Event Hub</div>
+                <div class="banner-sub">Official Ticket — Please bring this to the event</div>
             </div>
-            <h2 class="event-title">{{ event.title }}</h2>
-            <table class="details-table">
+
+            <table class="layout">
                 <tr>
-                    <td class="label">Date & Time</td>
-                    <td>{{ event.start_time|date:"l, F j, Y" }} at {{ event.start_time|date:"P" }}</td>
-                </tr>
-                <tr>
-                    <td class="label">Location</td>
-                    <td>Bangalore University Campus</td>
-                </tr>
-                <tr>
-                    <td class="label">Organizer</td>
-                    <td>{{ event.organizer.username }}</td>
+                    <td class="left">
+                        <div class="event-title">{{ event.title }}</div>
+
+                        <div class="when">
+                            <span class="label">Starts</span>
+                            <div class="value">{% if event.start_time %}{{ event.start_time|date:"l, d F Y" }} at {{ event.start_time|time:"H:i" }}{% else %}TBA{% endif %}</div>
+                        </div>
+
+                        <div class="when">
+                            <span class="label">Ends</span>
+                            <div class="value">{% if event.end_time %}{{ event.end_time|date:"l, d F Y" }} at {{ event.end_time|time:"H:i" }}{% else %}—{% endif %}</div>
+                        </div>
+
+                        <div class="where">
+                            <span class="label">Location</span>
+                            <div class="value">{% if event.location %}{{ event.location }}{% else %}Online / See event page{% endif %}</div>
+                        </div>
+
+                        <div class="mode">
+                            <span class="label">Mode</span>
+                            <div class="value">{{ event.event_mode|default:"Online" }}</div>
+                        </div>
+
+                        <div class="organizer">
+                            <span class="label">Organizer</span>
+                            <div class="value">{{ event.organizer.get_full_name|default:event.organizer.username }}{% if event.organizer.email %} — {{ event.organizer.email }}{% endif %}</div>
+                        </div>
+
+                        <div class="notes">
+                            Please present this ticket (or the attached PDF) at the check-in desk. This ticket is non-transferable and will be verified using the QR code.
+                        </div>
+                    </td>
+
+                    <td class="right">
+                        {% if qr_code_path %}
+                            <img src="{{ qr_code_path }}" alt="QR Code" class="qr-img" />
+                        {% else %}
+                            <div style="width:160px;height:160px;background:#f1f5f9;margin:8px auto;line-height:160px;color:#9aa4b3;">No QR</div>
+                        {% endif %}
+
+                        <div class="attendee">{{ registration.attendee.get_full_name|default:registration.attendee.username }}</div>
+                        <div class="regid">Registration ID: REG-{{ registration.id }}</div>
+
+                        <div style="margin-top:10px; font-size:11px; color:#627383;">
+                            <div>Seat: {{ registration.seat_number|default:"N/A" }}</div>
+                        </div>
+                    </td>
                 </tr>
             </table>
-            <p class="footer-note">
-                Please have this ticket ready for scanning upon entry. This ticket is non-transferable.
-            </p>
-        </div>
-        <div class="stub">
-            <h3>Event Ticket</h3>
-            <p class="attendee-name">{{ registration.attendee.first_name|default:registration.attendee.username }}</p>
-            <img src="{{ qr_code_path }}" alt="QR Code">
-            <p class="reg-id">REG-{{ registration.id }}</p>
+
+            <div class="footer">
+                Event page: {{ event_url }}
+                <div class="small">If you have any issues, contact the organizer or reply to this email.</div>
+            </div>
         </div>
     </div>
 </body>

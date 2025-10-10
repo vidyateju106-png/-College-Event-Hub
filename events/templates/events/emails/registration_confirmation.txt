@@ -1,18 +1,36 @@
-Hello {{ user.username }},
+Registration Confirmed
+======================
 
-Thank you for registering for the event: "{{ event.title }}"!
+Hi {{ user.get_full_name|default:user.username }},
 
-Event Details:
-Start Time: {{ event.start_time }}
-End Time: {{ event.end_time }}
-Mode: {% if event.is_online %}Online{% else %}In-Person{% endif %}
+Thank you for registering for the following event:
 
-{% if not event.is_online %}
-Your QR code is attached to this email. Please present it at the event for check-in.
-{% else %}
-You can view the live stream on the event page: {{ event_url }}
+{{ event.title }}
+------------------
+{% if event.start_time %}Date & Time: {{ event.start_time|date:"D, j M Y" }}{% if event.start_time %} at {{ event.start_time|time:"H:i" }}{% endif %}
+{% endif %}
+{% if event.location %}Location: {{ event.location }}
+{% else %}Mode: {{ event.event_mode|default:"Online" }}
 {% endif %}
 
-We look forward to seeing you there!
+Ticket & Access
+---------------
+{% if event.event_mode != 'Online' %}
+Your ticket (including a QR code) is attached to this email as a PDF. Please present the ticket or QR code at the event entrance for quick check-in.
+{% else %}
+This event is online. Use the event page for stream and joining instructions:
+{{ event_url }}
+{% endif %}
 
-The CEMS Team
+Manage your registration or view more details:
+{{ event_url }}
+
+Need help?
+---------
+If you have any questions or need to update your registration, please contact the event organizer: {{ event.organizer.get_full_name|default:event.organizer.username }} (if an email is available use the reply-to of this message).
+
+Thanks,
+The College Event Hub Team
+
+--
+This message was sent automatically. If you believe you received this in error, please reply to this email or contact support.

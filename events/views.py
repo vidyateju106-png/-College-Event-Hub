@@ -413,21 +413,52 @@ def approve_event_view(request, event_id):
     event.status = 'Approved'
     event.save()
     messages.success(request, f'The event "{event.title}" has been approved.')
-    
     current_site = get_current_site(request)
+    protocol = 'https' if request.is_secure() else 'http'
+
+    # Build event URL for use in emails
+    try:
+        event_path = reverse('event_detail', args=[event.id])
+    except Exception:
+        event_path = f'/events/{event.id}/'
+    event_url = f"{protocol}://{current_site.domain}{event_path}"
+
     mail_subject = f'Your Event "{event.title}" has been Approved'
-    email_context = {'organizer': event.organizer, 'event': event, 'domain': current_site.domain}
+    # Email context with more details for rich email content
+    email_context = {
+        'organizer': event.organizer,
+        'event': event,
+        'domain': current_site.domain,
+        'event_url': event_url,
+    }
+
     html_content = render_to_string('events/emails/event_status_notification.html', email_context)
     text_content = render_to_string('events/emails/event_status_notification.txt', email_context)
-    email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [event.organizer.email])
-    email.attach_alternative(html_content, "text/html")
-    
-    try:
-        email.send()
-    except Exception as e:
-        logger.exception("Mail send failed for event approval")
-        messages.warning(request, "Event approved but email could not be sent. Please check mail configuration.")
-        # continue (do not raise) so the HTTP response succeeds
+
+    # First notify the organizer (To)
+    organizer_email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [event.organizer.email])
+    organizer_email.attach_alternative(html_content, "text/html")
+
+    # Prepare BCC list: all registered attendees' emails
+    registrants_qs = Registration.objects.filter(event=event).select_related('attendee')
+    bcc_emails = [r.attendee.email for r in registrants_qs if r.attendee and r.attendee.email]
+
+    # If there are registrants, send them an enhanced notification (BCC)
+    if bcc_emails:
+        # We'll send a single message with organizer in To and registrants in BCC so SMTP headers are minimal
+        try:
+            organizer_email.bcc = bcc_emails
+            organizer_email.send()
+        except Exception as e:
+            logger.exception(f"Mail send failed for event approval (event id={event.id})")
+            messages.warning(request, "Event approved but notification emails could not be sent to all recipients. Please check mail configuration.")
+    else:
+        # No registrants: just send to organizer
+        try:
+            organizer_email.send()
+        except Exception as e:
+            logger.exception(f"Mail send failed for event approval (organizer only) event id={event.id}")
+            messages.warning(request, "Event approved but email to the organizer could not be sent. Please check mail configuration.")
 
     return redirect('hod_dashboard')
 

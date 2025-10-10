@@ -1,35 +1,88 @@
-{% extends 'events/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Confirmation</title>
+    <style>
+        /* Email-safe minimal styles inline where possible; keep responsive */
+        body { margin:0; padding:0; background-color:#f4f6f8; font-family: Arial, Helvetica, sans-serif; }
+        .container { max-width:600px; margin:0 auto; }
+        .card { background:#ffffff; border-radius:8px; overflow:hidden; }
+        .hero { background: linear-gradient(90deg,#0f62fe 0%, #0456d9 100%); color:white; padding:28px 24px; text-align:left; }
+        .hero h1 { margin:0; font-size:22px; line-height:1.2; }
+        .hero p { margin:8px 0 0 0; font-size:14px; opacity:0.95; }
+        .content { padding:20px 24px; color:#334155; }
+        .event-title { font-size:18px; font-weight:700; color:#0f172a; margin:0 0 8px 0; }
+        .meta { font-size:14px; color:#64748b; margin-bottom:16px; }
+        .btn { display:inline-block; background:#0f62fe; color:white; padding:12px 20px; border-radius:6px; text-decoration:none; font-weight:600; }
+        .muted { color:#94a3b8; font-size:13px; }
+        .divider { height:1px; background:#eef2f7; margin:18px 0; }
+        .small { font-size:13px; color:#334155; }
+        @media only screen and (max-width:480px){ .hero h1{font-size:18px;} .content{padding:16px;} }
+    </style>
+</head>
+<body>
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#f4f6f8; padding:24px 0;">
+        <tr>
+            <td align="center">
+                <table class="container" width="600" cellpadding="0" cellspacing="0" role="presentation">
+                    <tr>
+                        <td class="card" style="border-radius:8px; overflow:hidden;">
+                            <div class="hero" style="background:linear-gradient(90deg,#0f62fe 0%, #0456d9 100%); padding:22px; color:#fff;">
+                                <h1>Registration Confirmed</h1>
+                                <p style="margin-top:8px; opacity:0.95;">You're all set — thanks for registering, {{ user.get_full_name|default:user.username }}.</p>
+                            </div>
 
-{% block content %}
-<div class="container mx-auto">
-    <div class="flex items-center justify-center min-h-[70vh]">
-        <div class="w-full max-w-lg text-center">
-            <div class="bg-white rounded-xl shadow-lg p-8">
-                <i class="fas fa-check-circle fa-5x text-green-500 mb-4"></i>
-                <h1 class="text-3xl font-bold text-gray-800">Registration Successful!</h1>
-                <p class="text-gray-600 mt-2 text-lg">You are now registered for <strong>{{ registration.event.title }}</strong>.</p>
-                
-                {% if registration.event.event_mode != 'Online' %}
-                    <p class="text-gray-500 mt-4">Present this QR code at the event for check-in.</p>
-                    {% if registration.qr_code_path %}
-                        <div class="my-6">
-                            <img src="{{ registration.qr_code_path.url }}" alt="Your QR Code" class="mx-auto border-4 border-gray-200 rounded-lg p-2" style="max-width: 250px;">
-                        </div>
-                    {% else %}
-                         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 my-6 rounded-r-lg" role="alert">
-                            <p>QR Code not available.</p>
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <p class="text-gray-500 mt-4">An email has been sent with details on how to join the online stream.</p>
-                {% endif %}
-                
-                <div class="flex flex-col sm:flex-row gap-3 mt-6">
-                    <a href="{% url 'home' %}" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Back to Home</a>
-                    <a href="{% url 'my_registrations' %}" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 transition duration-300">View All My Registrations</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
+                            <div class="content" style="padding:20px 24px; color:#334155;">
+                                <p class="event-title">{{ event.title }}</p>
+                                <p class="meta">
+                                    {% if event.start_time %}
+                                        <strong>Date &amp; Time:</strong> {{ event.start_time|date:"D, j M Y" }}{% if event.start_time %} at {{ event.start_time|time:"H:i" }}{% endif %}<br>
+                                    {% endif %}
+                                    {% if event.location %}
+                                        <strong>Location:</strong> {{ event.location }}
+                                    {% else %}
+                                        <strong>Mode:</strong> {{ event.event_mode|default:"Online" }}
+                                    {% endif %}
+                                </p>
+
+                                <p class="small">We have reserved your seat for this event. Below is everything you need to join or attend.</p>
+
+                                <div style="margin:18px 0; text-align:center;">
+                                    <a href="{{ event_url }}" class="btn">View Event Details</a>
+                                </div>
+
+                                <div class="divider" style="height:1px; background:#eef2f7; margin:18px 0;"></div>
+
+                                {% if event.event_mode != 'Online' %}
+                                    <h3 style="font-size:15px; margin:0 0 8px 0;">Ticket & Check-in</h3>
+                                    <p class="small">If your ticket contains a QR code it will be included as an attachment (PDF) with this email. Please present the ticket at the registration desk for a quick check-in.</p>
+                                {% else %}
+                                    <h3 style="font-size:15px; margin:0 0 8px 0;">Online Access</h3>
+                                    <p class="small">This is an online event. Use the "View Event Details" button above for the stream link and joining instructions. If you have any trouble joining, contact the event organizer.</p>
+                                {% endif %}
+
+                                <div style="margin-top:16px;">
+                                    <p class="muted">Need to make changes? <a href="{{ event_url }}" style="color:#0f62fe; text-decoration:none;">Manage your registration</a> or visit <a href="{{ event_url }}" style="color:#0f62fe; text-decoration:none;">the event page</a>.</p>
+                                </div>
+
+                                <div style="margin-top:16px; color:#94a3b8; font-size:12px;">
+                                    <p style="margin:0;">Event organized by: {{ event.organizer.get_full_name|default:event.organizer.username }}</p>
+                                    <p style="margin:6px 0 0 0;">If you did not register for this event or you believe this is an error, please contact the organizer or reply to this email.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-top:12px; text-align:center; font-size:12px; color:#94a3b8;">
+                            <p style="margin:0;">&copy; {{ now|date:"Y" }} College Event Hub. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
