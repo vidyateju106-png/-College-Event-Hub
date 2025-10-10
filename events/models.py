@@ -17,6 +17,11 @@ class Profile(models.Model):
         return f'{self.user.username} - {self.role}'
 
 class Event(models.Model):
+    MODE_CHOICES = (
+        ('In-Person', 'In-Person Only'),
+        ('Online', 'Online Only'),
+        ('Hybrid', 'Hybrid (In-Person and Online)'),
+    )
     STATUS_CHOICES = (
         ('Draft', 'Draft'),
         ('Pending Approval', 'Pending Approval'),
@@ -29,7 +34,7 @@ class Event(models.Model):
     description = models.TextField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    is_online = models.BooleanField(default=False)
+    event_mode = models.CharField(max_length=10, choices=MODE_CHOICES, default='In-Person')
     stream_url = models.URLField(blank=True, null=True)
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Draft')
@@ -49,13 +54,12 @@ class Event(models.Model):
 
     def clean(self):
         """
-        Ensure start_time is strictly before end_time.
-        This is the single source of truth for this validation.
+        Custom validation for the Event model.
         """
         if self.start_time and self.end_time:
             if self.start_time >= self.end_time:
                 raise ValidationError({'end_time': 'End time must be after the start time.'})
-            
+
             # Only require start_time to be in the future for new events
             # so that updating status or other fields on existing events
             # doesn't fail model validation unexpectedly.
@@ -66,6 +70,9 @@ class Event(models.Model):
             if self.end_time > one_year_from_now:
                 raise ValidationError({'end_time': 'The end date cannot be more than one year from now.'})
 
+        # Require stream_url for Online and Hybrid events
+        if (self.event_mode == 'Online' or self.event_mode == 'Hybrid') and not self.stream_url:
+            raise ValidationError({'stream_url': 'A stream URL is required for Online or Hybrid events.'})
 
         # Prevent marking an event as Completed before it has actually ended.
         if self.status == 'Completed' and self.end_time and self.end_time > timezone.now():
@@ -112,3 +119,4 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f'Feedback for {self.event.title} by {self.user.username}'
+

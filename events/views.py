@@ -106,10 +106,13 @@ def home(request):
     
     if query:
         events_qs = events_qs.filter(title__icontains=query)
+    
     if event_filter == 'online':
-        events_qs = events_qs.filter(is_online=True)
+        events_qs = events_qs.filter(Q(event_mode='Online') | Q(event_mode='Hybrid'))
     elif event_filter == 'in-person':
-        events_qs = events_qs.filter(is_online=False)
+        events_qs = events_qs.filter(Q(event_mode='In-Person') | Q(event_mode='Hybrid'))
+    elif event_filter == 'hybrid':
+        events_qs = events_qs.filter(event_mode='Hybrid')
         
     paginator = Paginator(events_qs, 9)  # Show 9 events per page
     page_number = request.GET.get('page')
@@ -279,13 +282,13 @@ def register_event_view(request, event_id):
     email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [request.user.email])
     email.attach_alternative(html_content, "text/html")
     
-    if event.is_online:
+    if event.event_mode == 'Online':
         messages.success(request, f'You have successfully registered for the online event: "{event.title}". An email confirmation has been sent.')
         email.send()
         # For online events, a simple redirect back to the detail page is sufficient.
         return redirect('event_detail', event_id=event.id)
     else:
-        # For in-person events, generate and attach the QR code PDF.
+        # For in-person and hybrid events, generate and attach the QR code PDF.
         qr_data = f'REG-{registration.id}-{event.id}-{request.user.username}'
         buffer = BytesIO()
         qrcode.make(qr_data).save(buffer, format='PNG')
@@ -494,6 +497,11 @@ def check_in_view(request):
             current_event_id = data.get('current_event_id')
             
             event = get_object_or_404(Event, pk=current_event_id)
+            
+            # Add validation to prevent check-in after event start time
+            if timezone.now() > event.start_time:
+                return JsonResponse({'status': 'error', 'message': 'Check-in is not allowed after the event has started.'})
+
             if event.organizer != request.user:
                 return HttpResponseForbidden("You do not have permission to perform this action.")
             
@@ -605,7 +613,4 @@ def analytics_dashboard_view(request, event_id):
     }
 
     return render(request, 'events/analytics_dashboard.html', context)
-
-
-
 

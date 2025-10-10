@@ -1,41 +1,35 @@
-{% extends 'events/emails/base_email.html' %}
+{% extends 'events/base.html' %}
 
-{% block email_content %}
-    <p style="font-size: 16px; margin: 0 0 16px;">Hi {{ user.first_name|default:user.username }},</p>
-    <p style="margin: 0 0 24px;">Thank you for registering for <strong>{{ event.title }}</strong>! We're thrilled to confirm your spot.</p>
-    
-    <table cellpadding="12" cellspacing="0" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; margin: 24px 0; font-size: 14px;">
-        <tr>
-            <td style="width: 100px; font-weight: 600; color: #4b5563;">Event:</td>
-            <td>{{ event.title }}</td>
-        </tr>
-        <tr>
-            <td style="border-top: 1px solid #e5e7eb; font-weight: 600; color: #4b5563;">Date:</td>
-            <td style="border-top: 1px solid #e5e7eb;">{{ event.start_time|date:"F d, Y" }}</td>
-        </tr>
-        <tr>
-            <td style="border-top: 1px solid #e5e7eb; font-weight: 600; color: #4b5563;">Time:</td>
-            <td style="border-top: 1px solid #e5e7eb;">{{ event.start_time|date:"P" }} - {{ event.end_time|date:"P" }}</td>
-        </tr>
-        <tr>
-            <td style="border-top: 1px solid #e5e7eb; font-weight: 600; color: #4b5563;">Location:</td>
-            <td style="border-top: 1px solid #e5e7eb;">
-                {% if event.is_online %}Online Event{% else %}Bengaluru University Campus{% endif %}
-            </td>
-        </tr>
-    </table>
-    
-    {% if not event.is_online %}
-        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px;">Your Ticket</h3>
-        <p style="margin: 0 0 24px;">Your unique QR code for check-in is attached to this email as a PDF. Please have it ready when you arrive at the event.</p>
-    {% else %}
-        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px;">How to Join</h3>
-        <p style="margin: 0 0 24px;">This is a virtual event. You can join the live stream by clicking the button below on the event day.</p>
-        <div style="text-align: center; margin: 32px 0;">
-            <a href="{{ event_url }}" style="background-color: #3b82f6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">View Live Stream</a>
+{% block content %}
+<div class="container mx-auto">
+    <div class="flex items-center justify-center min-h-[70vh]">
+        <div class="w-full max-w-lg text-center">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <i class="fas fa-check-circle fa-5x text-green-500 mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-800">Registration Successful!</h1>
+                <p class="text-gray-600 mt-2 text-lg">You are now registered for <strong>{{ registration.event.title }}</strong>.</p>
+                
+                {% if registration.event.event_mode != 'Online' %}
+                    <p class="text-gray-500 mt-4">Present this QR code at the event for check-in.</p>
+                    {% if registration.qr_code_path %}
+                        <div class="my-6">
+                            <img src="{{ registration.qr_code_path.url }}" alt="Your QR Code" class="mx-auto border-4 border-gray-200 rounded-lg p-2" style="max-width: 250px;">
+                        </div>
+                    {% else %}
+                         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 my-6 rounded-r-lg" role="alert">
+                            <p>QR Code not available.</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p class="text-gray-500 mt-4">An email has been sent with details on how to join the online stream.</p>
+                {% endif %}
+                
+                <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                    <a href="{% url 'home' %}" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Back to Home</a>
+                    <a href="{% url 'my_registrations' %}" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 transition duration-300">View All My Registrations</a>
+                </div>
+            </div>
         </div>
-    {% endif %}
-
-    <p style="margin: 0 0 16px;">We can't wait to see you there!</p>
-    <p style="margin: 0;">Best,<br>The CEMS Team</p>
+    </div>
+</div>
 {% endblock %}
