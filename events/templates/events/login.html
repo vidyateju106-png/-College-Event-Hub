@@ -29,12 +29,12 @@
 
                 <div>
                     <label for="{{ login_form.username.id_for_label }}" class="sr-only">Username</label>
-                    <input id="{{ login_form.username.id_for_label }}" name="{{ login_form.username.html_name }}" type="text" autocomplete="username" required class="form-input" placeholder="Username">
+                    <input id="{{ login_form.username.id_for_label }}" name="{{ login_form.username.html_name }}" type="text" required class="form-input" placeholder="Username" autocomplete="off">
                 </div>
                 
                 <div>
                     <label for="{{ login_form.password.id_for_label }}" class="sr-only">Password</label>
-                    <input id="{{ login_form.password.id_for_label }}" name="{{ login_form.password.html_name }}" type="password" autocomplete="current-password" required class="form-input" placeholder="Password">
+                    <input id="{{ login_form.password.id_for_label }}" name="{{ login_form.password.html_name }}" type="password" required class="form-input" placeholder="Password" autocomplete="off">
                 </div>
 
                 <div class="flex items-center justify-between">
@@ -59,4 +59,3 @@
     </div>
 </div>
 {% endblock %}
-

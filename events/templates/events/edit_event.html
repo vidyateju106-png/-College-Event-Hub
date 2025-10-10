@@ -6,12 +6,13 @@
         <div class="w-full max-w-2xl">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div class="bg-gray-800 text-white p-6">
-                    <h2 class="text-2xl font-bold">Propose a New Event</h2>
+                    <h2 class="text-2xl font-bold">Edit Event Details</h2>
+                    <p class="text-sm text-gray-300 mt-1">Update the details for "{{ event.title }}"</p>
                 </div>
                 <div class="p-8">
-                    <p class="text-gray-500 mb-6">Fill out the form below to submit your event for approval by the HOD.</p>
+                    <p class="text-gray-500 mb-6">Make your changes below. Resubmitting will send the event back to the HOD for approval.</p>
                     
-                    <form method="POST">
+                    <form method="POST" novalidate>
                         {% csrf_token %}
                         
                         {% if form.non_field_errors %}
@@ -24,18 +25,9 @@
 
                         <div class="space-y-6">
                             {% for field in form %}
-                                <div>
+                                <div id="div_{{ field.id_for_label }}">
                                     <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-gray-800 mb-1">{{ field.label }}</label>
-                                    
-                                    {% if field.name == 'is_online' %}
-                                        <div class="flex items-center">
-                                            {{ field }}
-                                            <span class="ml-2 text-sm text-gray-600">Is this an online event?</span>
-                                        </div>
-                                    {% else %}
-                                        {{ field }}
-                                    {% endif %}
-
+                                    {{ field }}
                                     {% if field.help_text %}
                                         <p class="mt-2 text-xs text-gray-500">{{ field.help_text }}</p>
                                     {% endif %}
@@ -47,9 +39,9 @@
                         </div>
                         
                         <div class="flex justify-end items-center mt-8 pt-6 border-t border-gray-200">
-                            <a href="{% url 'organizer_dashboard' %}" class="bg-blue-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-700 transition duration-300 mr-4">Cancel</a>
+                            <a href="{% url 'organizer_dashboard' %}" class="text-gray-600 hover:text-gray-800 font-medium mr-4">Cancel</a>
                             <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-700 transition duration-300">
-                                Submit for Approval
+                                Update and Resubmit
                             </button>
                         </div>
                     </form>
@@ -58,5 +50,26 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const entryFeeSelect = document.getElementById('{{ form.entry_fee.id_for_label }}');
+        const feeAmountDiv = document.getElementById('div_{{ form.fee_amount.id_for_label }}');
+
+        function toggleFeeAmount() {
+            if (entryFeeSelect.value === 'Paid') {
+                feeAmountDiv.style.display = 'block';
+            } else {
+                feeAmountDiv.style.display = 'none';
+            }
+        }
+
+        // Initial check on page load
+        toggleFeeAmount();
+
+        // Add event listener for changes
+        entryFeeSelect.addEventListener('change', toggleFeeAmount);
+    });
+</script>
 {% endblock %}
 

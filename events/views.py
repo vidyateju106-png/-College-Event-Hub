@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
-from django.db import models # Corrected import for transaction
+from django.db import models
 from django.db.models import Avg, Count, Q
 from django.db.models.functions import Round
 from django.utils import timezone
@@ -115,7 +115,7 @@ def home(request):
     elif event_filter == 'hybrid':
         events_qs = events_qs.filter(event_mode='Hybrid')
         
-    paginator = Paginator(events_qs, 9)  # Show 9 events per page
+    paginator = Paginator(events_qs, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -127,16 +127,14 @@ def event_detail(request, event_id):
     Displays the details for a single event.
     """
     event = get_object_or_404(Event, pk=event_id)
-    registration = None # Initialize registration as None
+    registration = None
     if request.user.is_authenticated:
-        # Try to get the registration object
         try:
             registration = Registration.objects.get(event=event, attendee=request.user)
         except Registration.DoesNotExist:
             registration = None
             
     embed_url = get_embed_url(event.stream_url)
-    # Pass the registration object to the context
     context = {'event': event, 'registration': registration, 'embed_url': embed_url}
     return render(request, 'events/event_detail.html', context)
 
@@ -150,23 +148,17 @@ def signup_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Create the Profile if it doesn't already exist. The form.save()
-            # may have already created a Profile, so use get_or_create to avoid
-            # a UNIQUE constraint IntegrityError.
             Profile.objects.get_or_create(
                 user=user,
                 defaults={'role': form.cleaned_data.get('role')}
             )
             login(request, user)
-            # Now this success message will be correctly set and displayed.
             messages.success(request, f'Account created successfully! Welcome, {user.username}.')
             return redirect('home')
         else:
-            # **ADDED THIS LINE**: Add an error message if the form is not valid.
             messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomUserCreationForm()
-    # If the form is not valid, it will re-render with errors.
     return render(request, 'events/signup.html', {'signup_form': form})
 
 
@@ -177,12 +169,13 @@ def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            user = authenticate(username=form.cleaned_data.get('username'), password=form.cleaned_data.get('password'))
-            if user is not None:
-                login(request, user)
-                next_url = request.GET.get('next')
-                return redirect(next_url) if next_url else redirect('home')
-        messages.error(request, 'Invalid username or password.')
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, f"Login successful! Welcome back, {user.username}.")
+            next_url = request.GET.get('next')
+            return redirect(next_url) if next_url else redirect('home')
+        else:
+            messages.error(request, 'Invalid username or password.')
     else:
         form = AuthenticationForm()
     return render(request, 'events/login.html', {'login_form': form})
@@ -191,6 +184,7 @@ def login_view(request):
 def logout_view(request):
     """Handles user logout."""
     logout(request)
+    messages.success(request, "You have been successfully logged out.")
     return redirect('home')
 
 # --- Event Management Views ---
@@ -247,7 +241,6 @@ class EventDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('organizer_dashboard')
 
     def test_func(self):
-        """Check if the current user is the organizer of the event."""
         event = self.get_object()
         return self.request.user == event.organizer
 
@@ -255,12 +248,13 @@ class EventDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         messages.success(self.request, f'The event "{self.object.title}" has been successfully deleted.')
         return super().form_valid(form)
 
-# --- Registration Views ---
+# --- Registration & Payment Views ---
 
 @login_required
 def register_event_view(request, event_id):
     """
-    Handles user registration for an event and sends a confirmation email.
+    Handles the registration process. For paid events, it redirects to the payment page.
+    For free events, it completes the registration directly.
     """
     event = get_object_or_404(Event, pk=event_id)
     
@@ -268,38 +262,31 @@ def register_event_view(request, event_id):
         messages.error(request, f'Sorry, "{event.title}" is already full.')
         return redirect('event_detail', event_id=event.id)
 
-    # Check if a registration already exists using the Registration model as the source of truth.
     if Registration.objects.filter(event=event, attendee=request.user).exists():
         messages.warning(request, f'You are already registered for "{event.title}".')
         return redirect('event_detail', event_id=event.id)
     
-    # Create the registration record for ALL event types first.
+    # If the event is paid, redirect to the payment simulation page.
+    if event.entry_fee == 'Paid':
+        return redirect('payment_page', event_id=event.id)
+
+    # --- Direct Registration for FREE events ---
     registration = Registration.objects.create(event=event, attendee=request.user)
     
-    # Use the sites framework to get the domain
     current_site = get_current_site(request)
     protocol = 'https' if request.is_secure() else 'http'
     event_path = reverse('event_detail', args=[event.id])
     event_url = f"{protocol}://{current_site.domain}{event_path}"
 
     mail_subject = f'Your Ticket for {event.title}'
-    email_context = {
-        'user': request.user, 
-        'event': event, 
-        'event_url': event_url
-    }
+    email_context = {'user': request.user, 'event': event, 'event_url': event_url}
     html_content = render_to_string('events/emails/registration_confirmation.html', email_context)
     text_content = render_to_string('events/emails/registration_confirmation.txt', email_context)
     email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [request.user.email])
     email.attach_alternative(html_content, "text/html")
     
-    if event.event_mode == 'Online':
-        messages.success(request, f'You have successfully registered for the online event: "{event.title}". An email confirmation has been sent.')
-        email.send()
-        # For online events, a simple redirect back to the detail page is sufficient.
-        return redirect('event_detail', event_id=event.id)
-    else:
-        # For in-person and hybrid events, generate and attach the QR code PDF.
+    # Generate QR code for non-online events
+    if event.event_mode != 'Online':
         qr_data = f'REG-{registration.id}-{event.id}-{request.user.username}'
         buffer = BytesIO()
         qrcode.make(qr_data).save(buffer, format='PNG')
@@ -309,20 +296,73 @@ def register_event_view(request, event_id):
         pdf_context = {
             'event': event,
             'registration': registration,
-            'qr_code_path': registration.qr_code_path.path, # Use .path for local file access
-            'protocol': protocol,
-            'current_site': current_site
+            'qr_code_path': registration.qr_code_path.path,
         }
         pdf = html_to_pdf('events/emails/ticket_template.html', pdf_context)
 
         if pdf:
             email.attach(f'Ticket-{event.title}.pdf', pdf, 'application/pdf')
 
-        email.send()
-        messages.success(request, f'You have successfully registered for "{event.title}". A confirmation email with your PDF ticket has been sent.')
-        
-        # Redirect to the confirmation page to show the on-screen QR code.
-        return redirect('registration_confirmation', registration_id=registration.id)
+    email.send()
+    messages.success(request, f'You have successfully registered for "{event.title}". A confirmation email has been sent.')
+    
+    return redirect('registration_confirmation', registration_id=registration.id)
+
+
+@login_required
+def payment_view(request, event_id):
+    """Displays the simulated UPI payment page."""
+    event = get_object_or_404(Event, pk=event_id)
+    return render(request, 'events/payment_page.html', {'event': event})
+
+
+@login_required
+def process_payment_view(request, event_id):
+    """
+    Simulates a successful payment and then creates the registration record.
+    """
+    event = get_object_or_404(Event, pk=event_id)
+
+    # Re-check for existing registration or if the event is full
+    if event.is_full or Registration.objects.filter(event=event, attendee=request.user).exists():
+        messages.error(request, 'Registration failed. The event might be full or you are already registered.')
+        return redirect('event_detail', event_id=event.id)
+
+    # Create the registration record AFTER successful "payment"
+    registration = Registration.objects.create(event=event, attendee=request.user)
+    
+    # Send confirmation email with QR code
+    current_site = get_current_site(request)
+    protocol = 'https' if request.is_secure() else 'http'
+    event_path = reverse('event_detail', args=[event.id])
+    event_url = f"{protocol}://{current_site.domain}{event_path}"
+
+    mail_subject = f'Your Ticket for {event.title}'
+    email_context = {'user': request.user, 'event': event, 'event_url': event_url}
+    html_content = render_to_string('events/emails/registration_confirmation.html', email_context)
+    text_content = render_to_string('events/emails/registration_confirmation.txt', email_context)
+    email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [request.user.email])
+    email.attach_alternative(html_content, "text/html")
+
+    if event.event_mode != 'Online':
+        qr_data = f'REG-{registration.id}-{event.id}-{request.user.username}'
+        buffer = BytesIO()
+        qrcode.make(qr_data).save(buffer, format='PNG')
+        file_name = f'reg_{registration.id}.png'
+        registration.qr_code_path.save(file_name, ContentFile(buffer.getvalue()))
+        pdf_context = {
+            'event': event,
+            'registration': registration,
+            'qr_code_path': registration.qr_code_path.path,
+        }
+        pdf = html_to_pdf('events/emails/ticket_template.html', pdf_context)
+        if pdf:
+            email.attach(f'Ticket-{event.title}.pdf', pdf, 'application/pdf')
+
+    email.send()
+    messages.success(request, f'Payment successful! You are now registered for "{event.title}". A confirmation email has been sent.')
+    
+    return redirect('registration_confirmation', registration_id=registration.id)
 
 
 @login_required
@@ -341,10 +381,8 @@ def my_registrations_view(request):
     Shows a user a list of all their registered events, separated into upcoming and past.
     """
     now = timezone.now()
-    # Get all registrations for the user, pre-fetching the related event for efficiency
     all_registrations = Registration.objects.filter(attendee=request.user).select_related('event').order_by('event__start_time')
     
-    # Separate them into upcoming and past
     upcoming_registrations = all_registrations.filter(event__end_time__gte=now)
     past_registrations = all_registrations.filter(event__end_time__lt=now).order_by('-event__start_time')
 
@@ -365,18 +403,15 @@ def organizer_dashboard_view(request):
         
     organized_events = Event.objects.filter(organizer=request.user).order_by('-start_time')
     
-    # Calculate statistics
     total_events = organized_events.count()
     pending_events_count = organized_events.filter(status='Pending Approval').count()
     
-    # Aggregate registrations and check-ins across all of the organizer's events
     registrations_aggregates = Registration.objects.filter(event__in=organized_events).aggregate(
         total_registrations=Count('id'),
         total_checked_in=Count('id', filter=Q(attended=True))
     )
     total_registrations = registrations_aggregates.get('total_registrations', 0)
     total_checked_in = registrations_aggregates.get('total_checked_in', 0)
-
 
     for event in organized_events:
         registrations = Registration.objects.filter(event=event)
@@ -424,52 +459,18 @@ def approve_event_view(request, event_id):
     event.status = 'Approved'
     event.save()
     messages.success(request, f'The event "{event.title}" has been approved.')
+    
+    # Email sending logic
     current_site = get_current_site(request)
-    protocol = 'https' if request.is_secure() else 'http'
-
-    # Build event URL for use in emails
-    try:
-        event_path = reverse('event_detail', args=[event.id])
-    except Exception:
-        event_path = f'/events/{event.id}/'
-    event_url = f"{protocol}://{current_site.domain}{event_path}"
-
     mail_subject = f'Your Event "{event.title}" has been Approved'
-    # Email context with more details for rich email content
     email_context = {
-        'organizer': event.organizer,
-        'event': event,
-        'domain': current_site.domain,
-        'event_url': event_url,
+        'organizer': event.organizer, 'event': event, 'domain': current_site.domain
     }
-
     html_content = render_to_string('events/emails/event_status_notification.html', email_context)
     text_content = render_to_string('events/emails/event_status_notification.txt', email_context)
-
-    # First notify the organizer (To)
-    organizer_email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [event.organizer.email])
-    organizer_email.attach_alternative(html_content, "text/html")
-
-    # Prepare BCC list: all registered attendees' emails
-    registrants_qs = Registration.objects.filter(event=event).select_related('attendee')
-    bcc_emails = [r.attendee.email for r in registrants_qs if r.attendee and r.attendee.email]
-
-    # If there are registrants, send them an enhanced notification (BCC)
-    if bcc_emails:
-        # We'll send a single message with organizer in To and registrants in BCC so SMTP headers are minimal
-        try:
-            organizer_email.bcc = bcc_emails
-            organizer_email.send()
-        except Exception as e:
-            logger.exception(f"Mail send failed for event approval (event id={event.id})")
-            messages.warning(request, "Event approved but notification emails could not be sent to all recipients. Please check mail configuration.")
-    else:
-        # No registrants: just send to organizer
-        try:
-            organizer_email.send()
-        except Exception as e:
-            logger.exception(f"Mail send failed for event approval (organizer only) event id={event.id}")
-            messages.warning(request, "Event approved but email to the organizer could not be sent. Please check mail configuration.")
+    email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [event.organizer.email])
+    email.attach_alternative(html_content, "text/html")
+    email.send()
 
     return redirect('hod_dashboard')
 
@@ -487,25 +488,16 @@ def reject_event_view(request, event_id):
             event.save()
             messages.warning(request, f'The event "{event.title}" has been rejected.')
             
-            # --- Start of Email Sending Logic ---
             current_site = get_current_site(request)
             mail_subject = f'Update on your Event: "{event.title}"'
             email_context = {
-                'organizer': event.organizer, 
-                'event': event, 
-                'domain': current_site.domain
+                'organizer': event.organizer, 'event': event, 'domain': current_site.domain
             }
             html_content = render_to_string('events/emails/event_status_notification.html', email_context)
             text_content = render_to_string('events/emails/event_status_notification.txt', email_context)
             email = EmailMultiAlternatives(mail_subject, text_content, settings.EMAIL_HOST_USER, [event.organizer.email])
             email.attach_alternative(html_content, "text/html")
-            
-            try:
-                email.send()
-            except Exception as e:
-                logger.error(f"Failed to send rejection email for event {event.id}: {e}")
-                messages.error(request, "Event rejected, but the notification email could not be sent. Please check your email configuration.")
-            # --- End of Email Sending Logic ---
+            email.send()
 
             return redirect('hod_dashboard')
     else:
@@ -540,10 +532,6 @@ def check_in_view(request):
             
             event = get_object_or_404(Event, pk=current_event_id)
             
-            # Add validation to prevent check-in after event start time
-            if timezone.now() > event.start_time:
-                return JsonResponse({'status': 'error', 'message': 'Check-in is not allowed after the event has started.'})
-
             if event.organizer != request.user:
                 return HttpResponseForbidden("You do not have permission to perform this action.")
             
@@ -562,7 +550,6 @@ def check_in_view(request):
                 return JsonResponse({'status': 'warning', 'message': f'Warning! {registration.attendee.username} has already been checked in.'})
             
             registration.attended = True
-            # record the check-in timestamp so scheduled tasks can rely on it
             registration.attended_at = timezone.now()
             registration.save()
             return JsonResponse({'status': 'success', 'message': f'Success! Checked in {registration.attendee.username}.'})
@@ -582,14 +569,12 @@ def leave_feedback_view(request, event_id):
     """
     event = get_object_or_404(Event, pk=event_id)
     
-    # Check if the user is registered for this event.
     try:
         registration = Registration.objects.get(event=event, attendee=request.user)
     except Registration.DoesNotExist:
         messages.error(request, "You are not registered for this event.")
         return redirect('my_registrations')
 
-    # Check if feedback has already been submitted for this registration.
     if registration.has_submitted_feedback():
         messages.warning(request, "You have already submitted feedback for this event.")
         return redirect('my_registrations')
@@ -633,13 +618,9 @@ def analytics_dashboard_view(request, event_id):
     else:
         average_rating = "N/A"
         
-    # Get the counts for ratings that exist in the database
     rating_counts_query = feedback_data.values('rating').annotate(count=Count('rating'))
-    
-    # Create a dictionary map of {rating: count}
     rating_map = {item['rating']: item['count'] for item in rating_counts_query}
     
-    # Build the full chart data for ratings 1-5, filling in 0 for missing ratings
     chart_labels = [f'{i} Star' for i in range(1, 6)]
     chart_data = [rating_map.get(i, 0) for i in range(1, 6)]
     

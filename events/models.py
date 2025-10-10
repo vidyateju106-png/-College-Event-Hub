@@ -29,17 +29,24 @@ class Event(models.Model):
         ('Rejected', 'Rejected'),
         ('Completed', 'Completed'),
     )
+    FEE_CHOICES = (
+        ('Free', 'Free Entry'),
+        ('Paid', 'Paid Entry'),
+    )
 
     title = models.CharField(max_length=200)
     description = models.TextField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     event_mode = models.CharField(max_length=10, choices=MODE_CHOICES, default='In-Person')
+    location = models.CharField(max_length=255, blank=True, null=True, help_text="Physical address or room number for the event.")
     stream_url = models.URLField(blank=True, null=True)
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Draft')
-    rejection_reason = models.TextField(blank=True, null=True) # New field
+    rejection_reason = models.TextField(blank=True, null=True)
     max_seats = models.PositiveIntegerField(null=True, blank=True, help_text="Leave blank for unlimited seats.")
+    entry_fee = models.CharField(max_length=10, choices=FEE_CHOICES, default='Free')
+    fee_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="Enter the fee amount if this is a paid event.")
 
     def __str__(self):
         return self.title
@@ -60,9 +67,6 @@ class Event(models.Model):
             if self.start_time >= self.end_time:
                 raise ValidationError({'end_time': 'End time must be after the start time.'})
 
-            # Only require start_time to be in the future for new events
-            # so that updating status or other fields on existing events
-            # doesn't fail model validation unexpectedly.
             if self.pk is None and self.start_time < timezone.now():
                 raise ValidationError({'start_time': 'The start time must be in the future.'})
 
@@ -70,19 +74,22 @@ class Event(models.Model):
             if self.end_time > one_year_from_now:
                 raise ValidationError({'end_time': 'The end date cannot be more than one year from now.'})
 
-        # Require stream_url for Online and Hybrid events
         if (self.event_mode == 'Online' or self.event_mode == 'Hybrid') and not self.stream_url:
             raise ValidationError({'stream_url': 'A stream URL is required for Online or Hybrid events.'})
+            
+        if (self.event_mode == 'In-Person' or self.event_mode == 'Hybrid') and not self.location:
+            raise ValidationError({'location': 'A location is required for In-Person or Hybrid events.'})
 
-        # Prevent marking an event as Completed before it has actually ended.
+        if self.entry_fee == 'Paid' and not self.fee_amount:
+            raise ValidationError({'fee_amount': 'A fee amount is required for paid events.'})
+
+        if self.entry_fee == 'Free' and self.fee_amount:
+            self.fee_amount = None
+
         if self.status == 'Completed' and self.end_time and self.end_time > timezone.now():
             raise ValidationError({'status': 'Event cannot be marked Completed before end_time.'})
 
     def save(self, *args, **kwargs):
-        """
-        Run model validation before saving to prevent invalid events from
-        ever entering the database.
-        """
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -103,7 +110,6 @@ class Registration(models.Model):
         return f'{self.attendee.username} registered for {self.event.title}'
 
     def has_submitted_feedback(self):
-        """Checks if the user has already submitted feedback for this event's registration."""
         return Feedback.objects.filter(event=self.event, user=self.attendee).exists()
 
 
@@ -119,4 +125,5 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f'Feedback for {self.event.title} by {self.user.username}'
+
 

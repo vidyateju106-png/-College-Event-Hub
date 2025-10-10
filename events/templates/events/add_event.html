@@ -26,16 +26,7 @@
                             {% for field in form %}
                                 <div>
                                     <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-gray-800 mb-1">{{ field.label }}</label>
-                                    
-                                    {% if field.name == 'is_online' %}
-                                        <div class="flex items-center">
-                                            {{ field }}
-                                            <span class="ml-2 text-sm text-gray-600">Is this an online event?</span>
-                                        </div>
-                                    {% else %}
-                                        {{ field }}
-                                    {% endif %}
-
+                                    {{ field }}
                                     {% if field.help_text %}
                                         <p class="mt-2 text-xs text-gray-500">{{ field.help_text }}</p>
                                     {% endif %}
@@ -47,8 +38,8 @@
                         </div>
                         
                         <div class="flex justify-end items-center mt-8 pt-6 border-t border-gray-200">
-                            <a href="{% url 'organizer_dashboard' %}" class="bg-blue-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-700 transition duration-300 mr-4">Cancel</a>
-                            <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-700 transition duration-300">
+                            <a href="{% url 'organizer_dashboard' %}" class="btn btn-secondary mr-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
                                 Submit for Approval
                             </button>
                         </div>
@@ -59,4 +50,3 @@
     </div>
 </div>
 {% endblock %}
-

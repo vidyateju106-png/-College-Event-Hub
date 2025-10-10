@@ -4,59 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>College Event Hub</title>
-    
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; /* A lighter gray for the background */
-        }
-        /* Custom styles for form inputs to ensure consistency */
-        .form-input, .form-textarea, .form-select {
-            @apply w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out;
-        }
-        .form-check-input {
-            @apply h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500;
-        }
-        /* Custom button styles for a consistent feel */
-        .btn {
-            @apply inline-flex items-center justify-center font-bold px-6 py-3 rounded-lg shadow-md transition-transform transform hover:-translate-y-0.5 duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2;
-        }
-        .btn-primary {
-            @apply bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500;
-        }
-         .btn-danger {
-            @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
-        }
-        .btn-secondary {
-            @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .form-input, .form-textarea, .form-select { @apply w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out; }
+        .form-check-input { @apply h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500; }
+        .btn { @apply inline-flex items-center justify-center font-bold px-6 py-3 rounded-lg shadow-md transition-transform transform hover:-translate-y-0.5 duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2; }
+        .btn-primary { @apply bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500; }
+        .btn-danger { @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500; }
+        .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
-
-    <!-- Navigation Bar -->
     <nav class="bg-gray-900 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
-                <!-- Logo and Branding -->
                 <div class="flex-shrink-0">
                     <a href="{% url 'home' %}" class="text-2xl font-extrabold flex items-center transition-transform transform hover:scale-105">
                         <i class="fas fa-layer-group mr-3 text-indigo-500 text-3xl"></i>
                         <span class="text-white">EventHub</span>
                     </a>
                 </div>
-                <!-- Desktop Nav Links -->
                 <div class="hidden md:flex md:items-center md:space-x-2">
                     <a href="{% url 'home' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-semibold transition-colors flex items-center"><i class="fas fa-home mr-2"></i>Home</a>
                     {% if user.is_authenticated %}
@@ -68,7 +40,6 @@
                         {% endif %}
                     {% endif %}
                 </div>
-                <!-- Right side buttons (Desktop) -->
                 <div class="hidden md:flex items-center space-x-4">
                      {% if user.is_authenticated %}
                         <div class="text-gray-400 text-sm">
@@ -84,7 +55,6 @@
                         </a>
                     {% endif %}
                 </div>
-                <!-- Mobile Menu Button -->
                 <div class="md:hidden">
                     <button id="mobile-menu-button" class="text-gray-300 hover:text-white focus:outline-none">
                         <i class="fas fa-bars fa-lg"></i>
@@ -92,7 +62,6 @@
                 </div>
             </div>
         </div>
-        <!-- Mobile Menu -->
         <div id="mobile-menu" class="md:hidden hidden bg-gray-900/95 backdrop-blur-sm">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <a href="{% url 'home' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-home mr-2 w-6 text-center"></i>Home</a>
@@ -128,8 +97,6 @@
             </div>
         </div>
     </nav>
-
-    <!-- Main Content -->
     <main class="flex-grow">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             {% if messages %}
@@ -151,28 +118,21 @@
                 {% endfor %}
                 </div>
             {% endif %}
-            
             {% block content %}{% endblock %}
         </div>
     </main>
-
-    <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400">
         <div class="container mx-auto px-4 py-12 text-center">
             <p>&copy; {% now "Y" %} College Event Hub. All rights reserved.</p>
             <p class="text-xs mt-2">Designed By VidyaAchar for Bangalore University</p>
         </div>
     </footer>
-
-    <!-- Simple JS for Mobile Menu Toggle -->
     <script>
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
-
         mobileMenuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
         });
     </script>
 </body>
 </html>
-
