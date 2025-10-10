@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
+from django.db import models # Corrected import for transaction
 from django.db.models import Avg, Count, Q
 from django.db.models.functions import Round
 from django.utils import timezone
@@ -149,15 +150,25 @@ def signup_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            profile, created = Profile.objects.get_or_create(user=user)
-            profile.role = form.cleaned_data.get('role')
-            profile.save()
+            # Create the Profile if it doesn't already exist. The form.save()
+            # may have already created a Profile, so use get_or_create to avoid
+            # a UNIQUE constraint IntegrityError.
+            Profile.objects.get_or_create(
+                user=user,
+                defaults={'role': form.cleaned_data.get('role')}
+            )
             login(request, user)
+            # Now this success message will be correctly set and displayed.
             messages.success(request, f'Account created successfully! Welcome, {user.username}.')
             return redirect('home')
+        else:
+            # **ADDED THIS LINE**: Add an error message if the form is not valid.
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomUserCreationForm()
+    # If the form is not valid, it will re-render with errors.
     return render(request, 'events/signup.html', {'signup_form': form})
+
 
 def login_view(request):
     """

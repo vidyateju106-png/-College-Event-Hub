@@ -68,8 +68,9 @@ def complete_past_events():
                 print(f"----> Skipping {attendee.username}: no email address.")
                 continue
 
-            # Only send if the user attended (for in-person) or if it was an online event.
-            if not (reg.attended or event.is_online):
+            # Only send if the user attended (for in-person) or if it was an online/hybrid event.
+            is_online_event = (event.event_mode == 'Online' or event.event_mode == 'Hybrid')
+            if not (reg.attended or is_online_event):
                 print(f"----> Skipping {attendee.username}: did not attend in-person event.")
                 continue
 

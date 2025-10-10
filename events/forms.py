@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Event, User, Feedback
+# Correctly import the User model from Django's auth system
+from django.contrib.auth.models import User 
+# Import your other models
+from .models import Event, Feedback
 from django.utils import timezone
 from datetime import timedelta
 import re
@@ -22,12 +25,30 @@ class CustomUserCreationForm(UserCreationForm):
 
     def clean_username(self):
         """
-        Validates that the username contains only alphabetic characters.
+        MODIFIED: Validates that the username contains only letters, numbers,
+        and underscores to make it more user-friendly.
         """
         username = self.cleaned_data.get('username')
-        if not username.isalpha():
-            raise forms.ValidationError("Username must contain only letters (no numbers or symbols).")
+        # This regex allows letters, numbers, and underscores.
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise forms.ValidationError("Username can only contain letters, numbers, and underscores.")
         return username
+
+    def save(self, commit=True):
+        """
+        Override save to ensure the email and role are saved and a Profile
+        instance is created with the chosen role.
+        """
+        user = super().save(commit=False)
+        user.email = self.cleaned_data.get('email')
+        if commit:
+            user.save()
+            # Create or update the Profile
+            from .models import Profile
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.role = self.cleaned_data.get('role')
+            profile.save()
+        return user
 
 
 class EventForm(forms.ModelForm):
@@ -109,4 +130,3 @@ class FeedbackForm(forms.ModelForm):
         widgets = {
             'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Tell us more about your experience (optional)...'}),
         }
-
