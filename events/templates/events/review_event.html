@@ -1,0 +1,46 @@
+{% extends 'events/base.html' %}
+
+{% block content %}
+<div class="container mx-auto">
+    <div class="flex justify-center py-8">
+        <div class="w-full max-w-2xl">
+            <div class="bg-white rounded-xl shadow-lg">
+                <div class="bg-gray-800 text-white p-6 rounded-t-xl">
+                    <h2 class="text-2xl font-bold">Review Event Submission</h2>
+                    <p class="text-sm text-gray-300 mt-1">Review the details below before approving or rejecting.</p>
+                </div>
+                <div class="p-8">
+                    <!-- Event Details Section -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ event.title }}</h3>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex justify-between"><span class="font-medium text-gray-500">Organizer:</span> <span class="text-gray-800">{{ event.organizer.username }}</span></li>
+                            <li class="flex justify-between"><span class="font-medium text-gray-500">Starts:</span> <span class="text-gray-800">{{ event.start_time|date:"D, M d, Y - P" }}</span></li>
+                            <li class="flex justify-between"><span class="font-medium text-gray-500">Ends:</span> <span class="text-gray-800">{{ event.end_time|date:"D, M d, Y - P" }}</span></li>
+                            <li class="flex justify-between"><span class="font-medium text-gray-500">Event Mode:</span> <span class="text-gray-800">{{ event.event_mode }}</span></li>
+                            {% if event.budget %}
+                            <li class="flex justify-between"><span class="font-medium text-gray-500">Requested Budget:</span> <span class="font-bold text-gray-900">₹{{ event.budget }}</span></li>
+                            {% endif %}
+                            <li class="mt-3 pt-3 border-t border-gray-200">
+                                <span class="font-medium text-gray-500 block mb-1">Description:</span>
+                                <p class="text-gray-800 mt-1 whitespace-pre-wrap p-2 bg-white rounded">{{ event.description }}</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end items-center mt-8 pt-6 border-t border-gray-200 space-x-4">
+                        <a href="{% url 'hod_dashboard' %}" class="text-gray-600 hover:text-gray-800 font-medium">Back to Dashboard</a>
+                        <a href="{% url 'reject_event_confirm' event.id %}" class="bg-red-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-red-700 transition duration-300">
+                            Reject Event
+                        </a>
+                        <a href="{% url 'approve_event' event.id %}" class="bg-green-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-green-700 transition duration-300">
+                            Approve & Assign Location
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -29,7 +29,7 @@ SECRET_KEY = config('SECRET_KEY')
 # Load from .env file
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.162.19.21']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.127.218.21']
 # Application definition
 
 INSTALLED_APPS = [
@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# https://docs.djangoproject.com/en/5.2/topics/i1n/
 
 LANGUAGE_CODE = 'en-us'
 

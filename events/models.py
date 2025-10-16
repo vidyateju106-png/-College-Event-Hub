@@ -39,7 +39,7 @@ class Event(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     event_mode = models.CharField(max_length=10, choices=MODE_CHOICES, default='In-Person')
-    location = models.CharField(max_length=255, blank=True, null=True, help_text="Physical address or room number for the event.")
+    location = models.CharField(max_length=255, blank=True, null=True, help_text="Assigned by HOD upon approval.")
     stream_url = models.URLField(blank=True, null=True)
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Draft')
@@ -47,52 +47,47 @@ class Event(models.Model):
     max_seats = models.PositiveIntegerField(null=True, blank=True, help_text="Leave blank for unlimited seats.")
     entry_fee = models.CharField(max_length=10, choices=FEE_CHOICES, default='Free')
     fee_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="Enter the fee amount if this is a paid event.")
+    budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Estimated budget for the event.")
 
     def __str__(self):
         return self.title
 
     @property
     def is_full(self):
-        """Checks if the event is full based on registrations."""
         if not self.max_seats:
             return False
-        # Use the Registration model as the source of truth
         return self.registration_set.count() >= self.max_seats
 
     def clean(self):
-        """
-        Custom validation for the Event model.
-        """
         if self.start_time and self.end_time:
             if self.start_time >= self.end_time:
                 raise ValidationError({'end_time': 'End time must be after the start time.'})
-
             if self.pk is None and self.start_time < timezone.now():
                 raise ValidationError({'start_time': 'The start time must be in the future.'})
-
             one_year_from_now = timezone.now() + timedelta(days=365)
             if self.end_time > one_year_from_now:
                 raise ValidationError({'end_time': 'The end date cannot be more than one year from now.'})
-
         if (self.event_mode == 'Online' or self.event_mode == 'Hybrid') and not self.stream_url:
             raise ValidationError({'stream_url': 'A stream URL is required for Online or Hybrid events.'})
-            
-        if (self.event_mode == 'In-Person' or self.event_mode == 'Hybrid') and not self.location:
-            raise ValidationError({'location': 'A location is required for In-Person or Hybrid events.'})
-
         if self.entry_fee == 'Paid' and not self.fee_amount:
             raise ValidationError({'fee_amount': 'A fee amount is required for paid events.'})
-
         if self.entry_fee == 'Free' and self.fee_amount:
             self.fee_amount = None
-
         if self.status == 'Completed' and self.end_time and self.end_time > timezone.now():
-            raise ValidationError({'status': 'Event cannot be marked Completed before end_time.'})
+            raise ValidationError('An event cannot be marked as "Completed" before its end time has passed.')
+        if self.location and self.start_time and self.end_time:
+            conflicting_events = Event.objects.filter(
+                location=self.location,
+                start_time__lt=self.end_time,
+                end_time__gt=self.start_time,
+                status='Approved'
+            ).exclude(pk=self.pk)
+            if conflicting_events.exists():
+                raise ValidationError({'location': 'This location is already booked for an overlapping time period.'})
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
-
 
 class Registration(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
@@ -112,7 +107,6 @@ class Registration(models.Model):
     def has_submitted_feedback(self):
         return Feedback.objects.filter(event=self.event, user=self.attendee).exists()
 
-
 class Feedback(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='feedback')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -125,5 +119,4 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f'Feedback for {self.event.title} by {self.user.username}'
-
 

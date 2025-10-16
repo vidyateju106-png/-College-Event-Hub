@@ -16,7 +16,7 @@ urlpatterns = [
     path('organizer/event/<int:event_id>/edit/', views.edit_event_view, name='edit_event'),
     path('organizer/event/<int:pk>/delete/', views.EventDeleteView.as_view(), name='delete_event'),
 
-    # --- Registration & Payment Flow ---
+    # --- Registration & SIMULATED Payment Flow ---
     path('event/<int:event_id>/register/', views.register_event_view, name='register_event'),
     path('event/<int:event_id>/pay/', views.payment_view, name='payment_page'),
     path('event/<int:event_id>/process_payment/', views.process_payment_view, name='process_payment'),
@@ -28,6 +28,7 @@ urlpatterns = [
     path('organizer/dashboard/', views.organizer_dashboard_view, name='organizer_dashboard'),
     
     # --- HOD Actions ---
+    path('hod/event/<int:event_id>/review/', views.review_event_view, name='review_event'),
     path('hod/event/<int:event_id>/approve/', views.approve_event_view, name='approve_event'),
     path('hod/event/<int:event_id>/reject/', views.reject_event_view, name='reject_event_confirm'),
 
