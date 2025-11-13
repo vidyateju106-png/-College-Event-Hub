@@ -41,7 +41,7 @@
                     <!-- UPI ID Form -->
                     <div>
                         <p class="font-semibold text-gray-700 text-center mb-3">Pay using UPI ID</p>
-                        <form action="{% url 'process_payment' event.id %}" method="POST" class="space-y-4">
+                        <form action="{% url 'payment_simulation' event.id %}" method="POST" class="space-y-4">
                             {% csrf_token %}
                             <div>
                                 <label for="upi_id" class="sr-only">Enter your UPI ID</label>

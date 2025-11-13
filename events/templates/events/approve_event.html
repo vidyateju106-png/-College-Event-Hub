@@ -23,6 +23,16 @@
                                 {% if event.budget %}
                                 <li class="flex justify-between"><span class="font-medium text-gray-500">Requested Budget:</span> <span class="font-bold text-gray-900">₹{{ event.budget }}</span></li>
                                 {% endif %}
+                                <!-- ADDED THIS BLOCK to show entry fee -->
+                                <li class="flex justify-between"><span class="font-medium text-gray-500">Participant Entry:</span> 
+                                    <span class="text-gray-800 font-medium">
+                                        {{ event.get_entry_fee_display }}
+                                        {% if event.entry_fee == 'Paid' and event.fee_amount %}
+                                            (₹{{ event.fee_amount }})
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                <!-- END OF ADDED BLOCK -->
                                 <li class="mt-3 pt-3 border-t border-gray-200">
                                     <span class="font-medium text-gray-500 block mb-1">Description:</span>
                                     <p class="text-gray-800 mt-1 whitespace-pre-wrap p-2 bg-white rounded">{{ event.description }}</p>
@@ -66,4 +76,3 @@
     </div>
 </div>
 {% endblock %}
-

@@ -24,7 +24,8 @@
 
                         <div class="space-y-6">
                             {% for field in form %}
-                                <div>
+                                <!-- MODIFIED: Added id="div_{{ field.id_for_label }}" to each wrapper -->
+                                <div id="div_{{ field.id_for_label }}">
                                     <label for="{{ field.id_for_label }}" class="block text-sm font-bold text-gray-800 mb-1">{{ field.label }}</label>
                                     {{ field }}
                                     {% if field.help_text %}
@@ -38,8 +39,10 @@
                         </div>
                         
                         <div class="flex justify-end items-center mt-8 pt-6 border-t border-gray-200">
-                            <a href="{% url 'organizer_dashboard' %}" class="btn btn-secondary mr-4">Cancel</a>
-                            <button type="submit" class="btn btn-primary">
+                            <!-- UPDATED CANCEL BUTTON -->
+                            <a href="{% url 'organizer_dashboard' %}" class="btn bg-gray-200 text-gray-800 hover:bg-gray-300 font-bold py-3 px-4 rounded-lg mr-4">Cancel</a>
+                            <!-- UPDATED SUBMIT BUTTON -->
+                            <button type="submit" class="btn bg-blue-700 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">
                                 Submit for Approval
                             </button>
                         </div>
@@ -49,4 +52,43 @@
         </div>
     </div>
 </div>
+
+<!-- ADDED: JavaScript for conditional fields -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the select elements
+        const eventModeSelect = document.getElementById('{{ form.event_mode.id_for_label }}');
+        const entryFeeSelect = document.getElementById('{{ form.entry_fee.id_for_label }}');
+
+        // Get the wrapper divs for the fields to be toggled
+        const streamUrlDiv = document.getElementById('div_{{ form.stream_url.id_for_label }}');
+        const feeAmountDiv = document.getElementById('div_{{ form.fee_amount.id_for_label }}');
+
+        // Function to toggle Stream URL visibility
+        function toggleStreamUrl() {
+            if (eventModeSelect.value === 'Online' || eventModeSelect.value === 'Hybrid') {
+                streamUrlDiv.style.display = 'block';
+            } else {
+                streamUrlDiv.style.display = 'none';
+            }
+        }
+
+        // Function to toggle Fee Amount visibility
+        function toggleFeeAmount() {
+            if (entryFeeSelect.value === 'Paid') {
+                feeAmountDiv.style.display = 'block';
+            } else {
+                feeAmountDiv.style.display = 'none';
+            }
+        }
+
+        // Add event listeners
+        eventModeSelect.addEventListener('change', toggleStreamUrl);
+        entryFeeSelect.addEventListener('change', toggleFeeAmount);
+
+        // Run functions on page load to set the correct initial state
+        toggleStreamUrl();
+        toggleFeeAmount();
+    });
+</script>
 {% endblock %}

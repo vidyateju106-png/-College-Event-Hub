@@ -8,7 +8,7 @@
         <p class="mt-2 text-lg text-gray-500">Manage your upcoming and past event registrations.</p>
     </div>
 
-    {% if not upcoming_registregistrations and not past_registrations %}
+    {% if not upcoming_registrations and not past_registrations %}
         <div class="text-center bg-white rounded-xl shadow-md p-12 mt-8">
             <i class="fas fa-ticket-alt fa-4x text-gray-300 mb-4"></i>
             <p class="text-gray-500 text-lg">You haven't registered for any events yet.</p>
@@ -41,11 +41,13 @@
                         </div>
                         <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
                             {% if registration.event.event_mode == 'Online' %}
-                                <a href="{% url 'event_detail' registration.event.id %}" class="w-full sm:w-auto text-center bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
+                                <!-- UPDATED 'VIEW STREAM' BUTTON (PURPLE) -->
+                                <a href="{% url 'event_detail' registration.event.id %}" class="w-full sm:w-auto text-center bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-300 flex items-center justify-center">
                                     <i class="fas fa-video mr-2"></i>View Stream
                                 </a>
                             {% else %}
-                                <a href="{% url 'registration_confirmation' registration.id %}" class="w-full sm:w-auto text-center bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 flex items-center justify-center">
+                                <!-- UPDATED 'VIEW TICKET' BUTTON (PURPLE) -->
+                                <a href="{% url 'registration_confirmation' registration.id %}" class="w-full sm:w-auto text-center bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-300 flex items-center justify-center">
                                     <i class="fas fa-qrcode mr-2"></i>View Ticket
                                 </a>
                             {% endif %}
@@ -79,11 +81,13 @@
                         </div>
                          <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
                             {% if registration.has_submitted_feedback %}
-                                <button class="w-full sm:w-auto bg-green-100 text-green-800 font-bold py-2 px-4 rounded-lg cursor-not-allowed flex items-center justify-center" disabled>
+                                <!-- UPDATED 'FEEDBACK SUBMITTED' BUTTON -->
+                                <button class="w-full sm:w-auto bg-green-100 text-green-800 font-bold py-3 px-4 rounded-lg cursor-not-allowed flex items-center justify-center" disabled>
                                     <i class="fas fa-check-circle mr-2"></i>Feedback Submitted
                                 </button>
                             {% else %}
-                                <a href="{% url 'leave_feedback' registration.event.id %}" class="w-full sm:w-auto text-center bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300 flex items-center justify-center">
+                                <!-- UPDATED 'LEAVE FEEDBACK' BUTTON -->
+                                <a href="{% url 'leave_feedback' registration.event.id %}" class="w-full sm:w-auto text-center bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-yellow-600 transition duration-300 flex items-center justify-center">
                                     <i class="fas fa-star mr-2"></i>Leave Feedback
                                 </a>
                             {% endif %}
@@ -100,4 +104,3 @@
     {% endif %}
 </div>
 {% endblock %}
-

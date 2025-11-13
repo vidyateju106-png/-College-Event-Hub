@@ -29,7 +29,7 @@ SECRET_KEY = config('SECRET_KEY')
 # Load from .env file
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.127.218.21']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.200.8.21']
 # Application definition
 
 INSTALLED_APPS = [
@@ -47,6 +47,16 @@ INSTALLED_APPS = [
 
 # Add SITE_ID for the Sites framework
 SITE_ID = 1
+
+# --- CHANGE START ---
+# ADDED: SITE_SCHEME for building absolute URLs in background tasks.
+# REASON: Background tasks (like the scheduler) don't have access to the
+# user's request, so they don't know if the site is served over http or https.
+# This setting allows you to define it. You can add SITE_SCHEME=https to your
+# .env file for production.
+SITE_SCHEME = config('SITE_SCHEME', default='http')
+# --- CHANGE END ---
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -116,7 +126,7 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Kolkata'
 
-USE_I18N = True
+USE_I1N = True
 
 USE_TZ = True
 
@@ -154,4 +164,3 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # Grace period (in minutes) after event end before sending feedback
 FEEDBACK_GRACE_PERIOD_MINUTES = 1
-

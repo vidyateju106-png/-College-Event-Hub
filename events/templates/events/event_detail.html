@@ -63,17 +63,21 @@
                 <div class="d-grid gap-2">
                     {% if user.is_authenticated %}
                         {% if registration %}
-                            <button class="w-full btn bg-green-600 text-white cursor-not-allowed" disabled><i class="fas fa-check-circle mr-2"></i>Registered</button>
+                            <!-- UPDATED 'REGISTERED' BUTTON -->
+                            <button class="w-full btn bg-green-600 text-white font-bold py-3 px-4 rounded-lg cursor-not-allowed opacity-70" disabled><i class="fas fa-check-circle mr-2"></i>Registered</button>
                             {% if event.event_mode != 'Online' %}
-                            <a href="{% url 'registration_confirmation' registration.id %}" class="w-full block text-center mt-2 btn btn-secondary">View My QR Code</a>
+                            <!-- UPDATED 'VIEW MY QR CODE' BUTTON (BLUE) -->
+                            <a href="{% url 'registration_confirmation' registration.id %}" class="w-full block text-center mt-2 btn bg-blue-700 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">View My QR Code</a>
                             {% endif %}
                         {% elif event.is_full %}
                             <button class="w-full btn btn-danger cursor-not-allowed" disabled><i class="fas fa-times-circle mr-2"></i>Event Full</button>
                         {% else %}
-                            <a href="{% url 'register_event' event.id %}" class="w-full block text-center btn btn-primary">Register Now</a>
+                            <!-- UPDATED 'REGISTER NOW' BUTTON (GREEN) -->
+                            <a href="{% url 'register_event' event.id %}" class="w-full block text-center btn bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg">Register Now</a>
                         {% endif %}
                     {% else %}
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="w-full block text-center btn btn-primary">Log in to Register</a>
+                        <!-- UPDATED 'LOG IN TO REGISTER' BUTTON (BLUE) -->
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="w-full block text-center btn bg-blue-700 hover:bg-blue-7all text-white font-bold py-3 px-4 rounded-lg">Log in to Register</a>
                     {% endif %}
                 </div>
             </div>
@@ -81,4 +85,3 @@
     </div>
 </div>
 {% endblock %}
-

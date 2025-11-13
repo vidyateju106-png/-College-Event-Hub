@@ -119,4 +119,3 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f'Feedback for {self.event.title} by {self.user.username}'
-

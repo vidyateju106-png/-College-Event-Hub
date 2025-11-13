@@ -14,7 +14,7 @@ from django.db import models
 from django.db.models import Avg, Count, Q
 from django.db.models.functions import Round
 from django.utils import timezone
-from django.contrib.sites.shortcuts import get_current_site
+# REMOVED: from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.edit import DeleteView
 from django.core.paginator import Paginator
@@ -224,10 +224,12 @@ def register_event_view(request, event_id):
         return redirect('payment_page', event_id=event.id)
 
     registration = Registration.objects.create(event=event, attendee=request.user)
-    current_site = get_current_site(request)
-    protocol = 'https' if request.is_secure() else 'http'
-    event_path = reverse('event_detail', args=[event.id])
-    event_url = f"{protocol}://{current_site.domain}{event_path}"
+    # --- CHANGE START ---
+    # CHANGED: Replaced get_current_site with request.build_absolute_uri.
+    # REASON: This creates a full, correct URL (including https and the correct port)
+    # which is more reliable than constructing it manually.
+    event_url = request.build_absolute_uri(reverse('event_detail', args=[event.id]))
+    # --- CHANGE END ---
     mail_subject = f'Your Ticket for {event.title}'
     email_context = {'user': request.user, 'event': event, 'event_url': event_url}
     html_content = render_to_string('events/emails/registration_confirmation.html', email_context)
@@ -254,18 +256,24 @@ def payment_view(request, event_id):
     event = get_object_or_404(Event, pk=event_id)
     return render(request, 'events/payment_page.html', {'event': event})
 
+# --- CHANGE START ---
+# RENAMED: `process_payment_view` to `payment_simulation_view`.
+# REASON: This function does not process a real payment. It simulates a
+# successful payment to allow testing of the registration flow for paid events.
+# Renaming it makes its purpose clear and avoids confusion.
 @login_required
-def process_payment_view(request, event_id):
+def payment_simulation_view(request, event_id):
+# --- CHANGE END ---
     event = get_object_or_404(Event, pk=event_id)
     if event.is_full or Registration.objects.filter(event=event, attendee=request.user).exists():
         messages.error(request, 'Registration failed. The event might be full or you are already registered.')
         return redirect('event_detail', event_id=event.id)
 
     registration = Registration.objects.create(event=event, attendee=request.user)
-    current_site = get_current_site(request)
-    protocol = 'https' if request.is_secure() else 'http'
-    event_path = reverse('event_detail', args=[event.id])
-    event_url = f"{protocol}://{current_site.domain}{event_path}"
+    # --- CHANGE START ---
+    # Use request.build_absolute_uri for reliable URLs in emails
+    event_url = request.build_absolute_uri(reverse('event_detail', args=[event.id]))
+    # --- CHANGE END ---
     mail_subject = f'Your Ticket for {event.title}'
     email_context = {'user': request.user, 'event': event, 'event_url': event_url}
     html_content = render_to_string('events/emails/registration_confirmation.html', email_context)
@@ -362,10 +370,15 @@ def approve_event_view(request, event_id):
             event.status = 'Approved'
             event.save()
             messages.success(request, f'The event "{event.title}" has been approved and a location has been assigned.')
-            current_site = get_current_site(request)
+            # --- CHANGE START ---
+            # Build absolute URLs to pass to the email template
+            dashboard_url = request.build_absolute_uri(reverse('organizer_dashboard'))
+            # --- CHANGE END ---
             mail_subject = f'Your Event "{event.title}" has been Approved'
             email_context = {
-                'organizer': event.organizer, 'event': event, 'domain': current_site.domain
+                'organizer': event.organizer, 
+                'event': event, 
+                'organizer_dashboard_url': dashboard_url,
             }
             html_content = render_to_string('events/emails/event_status_notification.html', email_context)
             text_content = render_to_string('events/emails/event_status_notification.txt', email_context)
@@ -387,10 +400,15 @@ def reject_event_view(request, event_id):
             event.rejection_reason = form.cleaned_data['rejection_reason']
             event.save()
             messages.warning(request, f'The event "{event.title}" has been rejected.')
-            current_site = get_current_site(request)
+            # --- CHANGE START ---
+            # Build absolute URLs for the email template
+            edit_url = request.build_absolute_uri(reverse('edit_event', args=[event.id]))
+            # --- CHANGE END ---
             mail_subject = f'Update on your Event: "{event.title}"'
             email_context = {
-                'organizer': event.organizer, 'event': event, 'domain': current_site.domain
+                'organizer': event.organizer, 
+                'event': event, 
+                'edit_event_url': edit_url,
             }
             html_content = render_to_string('events/emails/event_status_notification.html', email_context)
             text_content = render_to_string('events/emails/event_status_notification.txt', email_context)
@@ -495,4 +513,3 @@ def analytics_dashboard_view(request, event_id):
         'recent_comments': recent_comments,
     }
     return render(request, 'events/analytics_dashboard.html', context)
-

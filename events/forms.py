@@ -21,7 +21,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
-        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        if not re.match(r'^[a-zA-Z0--9_]+$', username):
             raise forms.ValidationError("Username can only contain letters, numbers, and underscores.")
         return username
 
@@ -60,45 +60,11 @@ class EventForm(forms.ModelForm):
             raise forms.ValidationError("The description must be at least 20 characters long.")
         return description
 
-    def clean_start_time(self):
-        start_time = self.cleaned_data.get('start_time')
-        if start_time and start_time < timezone.now():
-            raise forms.ValidationError("The start time must be in the future.")
-        return start_time
-
     def clean_max_seats(self):
         max_seats = self.cleaned_data.get('max_seats')
         if max_seats is not None and max_seats <= 0:
             raise forms.ValidationError("The number of seats must be a positive number.")
         return max_seats
-
-    def clean(self):
-        cleaned_data = super().clean()
-        start_time = cleaned_data.get('start_time')
-        end_time = cleaned_data.get('end_time')
-        event_mode = cleaned_data.get('event_mode')
-        stream_url = cleaned_data.get('stream_url')
-        entry_fee = cleaned_data.get('entry_fee')
-        fee_amount = cleaned_data.get('fee_amount')
-
-        if start_time and end_time:
-            if end_time <= start_time:
-                self.add_error('end_time', "The end time must be after the start time.")
-            
-            one_year_from_now = timezone.now() + timedelta(days=365)
-            if end_time > one_year_from_now:
-                self.add_error('end_time', "The end date cannot be more than one year from now.")
-
-        if (event_mode == 'Online' or event_mode == 'Hybrid') and not stream_url:
-            self.add_error('stream_url', "A stream URL is required for Online or Hybrid events.")
-            
-        if entry_fee == 'Paid' and not fee_amount:
-            self.add_error('fee_amount', "A fee amount is required for paid events.")
-        
-        if entry_fee == 'Paid' and fee_amount is not None and fee_amount <= 0:
-            self.add_error('fee_amount', "The fee amount must be a positive number.")
-            
-        return cleaned_data
 
 class EventApprovalForm(forms.ModelForm):
     class Meta:
@@ -134,3 +100,4 @@ class FeedbackForm(forms.ModelForm):
         widgets = {
             'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Tell us more about your experience (optional)...'}),
         }
+

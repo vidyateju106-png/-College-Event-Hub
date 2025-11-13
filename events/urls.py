@@ -19,7 +19,7 @@ urlpatterns = [
     # --- Registration & SIMULATED Payment Flow ---
     path('event/<int:event_id>/register/', views.register_event_view, name='register_event'),
     path('event/<int:event_id>/pay/', views.payment_view, name='payment_page'),
-    path('event/<int:event_id>/process_payment/', views.process_payment_view, name='process_payment'),
+    path('event/<int:event_id>/process_payment/', views.payment_simulation_view, name='payment_simulation'),
     path('registration/<int:registration_id>/confirmation/', views.registration_confirmation_view, name='registration_confirmation'),
     
     # --- User & Role Dashboards ---

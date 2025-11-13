@@ -78,10 +78,16 @@ def complete_past_events():
 
             mail_subject = f'How was {event.title}? We\'d love your feedback!'
             
-            # Build absolute URL using the Sites framework
+            # --- CHANGE START ---
+            # CHANGED: Replaced hardcoded "http" with a setting.
+            # REASON: Since this background task has no access to the user's request,
+            # we can't know if the site is running on http or https. This change
+            # allows you to define the scheme in your settings for reliable links.
             current_site = Site.objects.get_current()
             feedback_path = reverse('leave_feedback', args=[event.id])
-            feedback_url = f"http://{current_site.domain}{feedback_path}"
+            site_scheme = getattr(settings, 'SITE_SCHEME', 'http')
+            feedback_url = f"{site_scheme}://{current_site.domain}{feedback_path}"
+            # --- CHANGE END ---
 
             email_context = {
                 'user': attendee,
@@ -108,4 +114,3 @@ def complete_past_events():
                 print(f"----> ERROR sending email to {attendee.email}: {e}")
 
     print(f"--- Scheduled Task Finished: Completed {len(events_to_complete)} event(s). ---")
-

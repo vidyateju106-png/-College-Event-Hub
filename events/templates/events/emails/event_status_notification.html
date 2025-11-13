@@ -25,7 +25,12 @@
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px;">What's Next?</h3>
         <p style="margin: 0 0 24px;">Congratulations! Your event is now live and visible to participants on the CEMS portal. You can manage it, view registrations, and access the scanner from your Organizer Dashboard.</p>
         <div style="text-align: center; margin: 32px 0;">
-            <a href="http://{{ domain }}{% url 'organizer_dashboard' %}" style="background-color: #4f46e5; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">Go to My Dashboard</a>
+            <!-- --- CHANGE START --- -->
+            <!-- CHANGED: Replaced manual URL construction with a single variable. -->
+            <!-- REASON: The full, correct URL is now built in the view and passed -->
+            <!-- directly here, making the link more reliable. -->
+            <a href="{{ organizer_dashboard_url }}" style="background-color: #4f46e5; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">Go to My Dashboard</a>
+            <!-- --- CHANGE END --- -->
         </div>
     {% elif event.status == 'Rejected' %}
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 8px;">Reason for Rejection</h3>
@@ -34,7 +39,10 @@
         </blockquote>
         <p style="margin: 0 0 24px;">Please review the feedback above. You can edit and resubmit your event for approval at any time.</p>
         <div style="text-align: center; margin: 32px 0;">
-            <a href="http://{{ domain }}{% url 'edit_event' event.id %}" style="background-color: #3b82f6; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">Edit and Resubmit Event</a>
+            <!-- --- CHANGE START --- -->
+            <!-- CHANGED: Replaced manual URL construction with a single variable. -->
+            <a href="{{ edit_event_url }}" style="background-color: #3b82f6; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">Edit and Resubmit Event</a>
+            <!-- --- CHANGE END --- -->
         </div>
     {% endif %}
 
