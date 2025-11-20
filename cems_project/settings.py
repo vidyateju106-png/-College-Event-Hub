@@ -29,7 +29,7 @@ SECRET_KEY = config('SECRET_KEY')
 # Load from .env file
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.200.8.21']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.64.230.21']
 # Application definition
 
 INSTALLED_APPS = [
